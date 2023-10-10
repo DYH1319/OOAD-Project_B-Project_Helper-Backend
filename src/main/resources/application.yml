@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: OOAD-Project_B-Project_Helper-Backend
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://dyh1319.asia:3306/ooad_project?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8&useSSL=false
+    username: ooad
+    password: OOADooad1234!@#$
+  # session (单位：秒)
+  session:
+    timeout: 600
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: on
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      table-prefix: t_
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+      logic-delete-field: is_deleted
