@@ -6,12 +6,12 @@ import org.apache.ibatis.annotations.Mapper;
 
 
 /**
- * @className NotificationMapper
- * @version 1.0
  * @author DYH
- * @since 2023/10/9 12:42
+ * @version 1.0
+ * @className NotificationMapper
+ * @since 2023/10/11 16:05
  */
-    
+
 @Mapper
 public interface NotificationMapper extends BaseMapper<Notification> {
 }

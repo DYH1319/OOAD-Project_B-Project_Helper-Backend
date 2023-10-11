@@ -6,6 +6,7 @@
     <!--@Table t_notification-->
     <id column="id" jdbcType="BIGINT" property="id" />
     <result column="project_id" jdbcType="BIGINT" property="projectId" />
+    <result column="course_id" jdbcType="BIGINT" property="courseId" />
     <result column="sender_id" jdbcType="BIGINT" property="senderId" />
     <result column="message" jdbcType="VARCHAR" property="message" />
     <result column="is_deleted" jdbcType="TINYINT" property="isDeleted" />
@@ -14,6 +15,6 @@
   </resultMap>
   <sql id="Base_Column_List">
     <!--@mbg.generated-->
-    id, project_id, sender_id, message, is_deleted, create_time, update_time
+    id, project_id, course_id, sender_id, message, is_deleted, create_time, update_time
   </sql>
 </mapper>
