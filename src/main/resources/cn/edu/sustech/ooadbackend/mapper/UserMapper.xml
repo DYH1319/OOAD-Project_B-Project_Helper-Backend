@@ -8,6 +8,7 @@
     <result column="user_account" jdbcType="VARCHAR" property="userAccount" />
     <result column="user_password" jdbcType="VARCHAR" property="userPassword" />
     <result column="user_role" jdbcType="INTEGER" property="userRole" />
+    <result column="username" jdbcType="VARCHAR" property="username" />
     <result column="age" jdbcType="INTEGER" property="age" />
     <result column="gender" jdbcType="TINYINT" property="gender" />
     <result column="email" jdbcType="VARCHAR" property="email" />
@@ -21,7 +22,8 @@
   </resultMap>
   <sql id="Base_Column_List">
     <!--@mbg.generated-->
-    id, user_account, user_password, user_role, age, gender, email, avatar_url, technical_stack, 
-    programming_skills, intended_teammates, is_deleted, create_time, update_time
+    id, user_account, user_password, user_role, username, age, gender, email, avatar_url, 
+    technical_stack, programming_skills, intended_teammates, is_deleted, create_time, 
+    update_time
   </sql>
 </mapper>
