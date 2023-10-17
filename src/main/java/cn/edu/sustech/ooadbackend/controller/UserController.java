@@ -32,12 +32,13 @@ public class UserController {
             throw new BusinessException(StatusCode.PARAMS_ERROR);
         }
         String userAccount = userRegisterRequest.getUserAccount();
+        String username = userRegisterRequest.getUsername();
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
-        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
+        if (StringUtils.isAnyBlank(userAccount, username, userPassword, checkPassword)) {
             throw new BusinessException(StatusCode.PARAMS_ERROR, "参数为空");
         }
-        long result = userService.userRegister(userAccount, userPassword, checkPassword);
+        long result = userService.userRegister(userAccount, username, userPassword, checkPassword);
         return ResponseUtils.success(result, "注册成功!");
     }
     

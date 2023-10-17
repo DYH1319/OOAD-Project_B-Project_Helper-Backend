@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import java.nio.charset.StandardCharsets;
-import java.util.regex.Pattern;
 
 /**
  * @className UserServiceImpl
@@ -31,10 +30,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private UserMapper userMapper;
     
     @Override
-    public long userRegister(String userAccount, String userPassword, String checkPassword) {
+    public long userRegister(String userAccount, String username, String userPassword, String checkPassword) {
         // 1. 校验
         // 校验非null非空
-        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) throw new BusinessException(StatusCode.PARAMS_ERROR, "参数为空");
+        if (StringUtils.isAnyBlank(userAccount, username, userPassword, checkPassword)) throw new BusinessException(StatusCode.PARAMS_ERROR, "参数为空");
         // 校验校验密码和密码相同
         if (!userPassword.equals(checkPassword)) throw new BusinessException(StatusCode.PARAMS_ERROR, "两次输入的密码不相同");
         // 校验账户不能与已有账户重复（需要访问数据库的校验应该在校验的最后执行以优化性能）
@@ -47,6 +46,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 3. 插入数据
         User user = new User();
         user.setUserAccount(userAccount);
+        user.setUsername(username);
         user.setUserPassword(encryptPassword);
         boolean saveResult = this.save(user);
         if (!saveResult) throw new BusinessException(StatusCode.SYSTEM_ERROR, "无法新建用户");
