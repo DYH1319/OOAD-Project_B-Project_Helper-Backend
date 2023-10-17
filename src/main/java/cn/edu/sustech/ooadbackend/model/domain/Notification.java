@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
  * @author DYH
  * @version 1.0
  * @className Notification
- * @since 2023/10/11 16:05
+ * @since 2023/10/17 11:25
  */
 
 @Data
@@ -51,6 +51,12 @@ public class Notification {
      */
     @TableField(value = "message")
     private String message;
+    
+    /**
+     * 通知标题，非空
+     */
+    @TableField(value = "title")
+    private String title;
     
     /**
      * 是否逻辑删除，默认值为正常(0)，非空<br/>0：正常，1：已被逻辑删除

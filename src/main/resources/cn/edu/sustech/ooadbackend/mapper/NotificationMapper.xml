@@ -9,12 +9,13 @@
     <result column="course_id" jdbcType="BIGINT" property="courseId" />
     <result column="sender_id" jdbcType="BIGINT" property="senderId" />
     <result column="message" jdbcType="VARCHAR" property="message" />
+    <result column="title" jdbcType="VARCHAR" property="title" />
     <result column="is_deleted" jdbcType="TINYINT" property="isDeleted" />
     <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
     <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
   </resultMap>
   <sql id="Base_Column_List">
     <!--@mbg.generated-->
-    id, project_id, course_id, sender_id, message, is_deleted, create_time, update_time
+    id, project_id, course_id, sender_id, message, title, is_deleted, create_time, update_time
   </sql>
 </mapper>
