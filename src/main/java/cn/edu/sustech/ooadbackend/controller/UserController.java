@@ -4,6 +4,7 @@ import cn.edu.sustech.ooadbackend.common.BaseResponse;
 import cn.edu.sustech.ooadbackend.common.StatusCode;
 import cn.edu.sustech.ooadbackend.exception.BusinessException;
 import cn.edu.sustech.ooadbackend.model.domain.User;
+import cn.edu.sustech.ooadbackend.model.request.CurrentUserUpdateRequest;
 import cn.edu.sustech.ooadbackend.model.request.UserLoginRequest;
 import cn.edu.sustech.ooadbackend.model.request.UserRegisterRequest;
 import cn.edu.sustech.ooadbackend.service.UserService;
@@ -75,5 +76,19 @@ public class UserController {
         }
         User safetyUser = userService.getCurrentUser(request);
         return ResponseUtils.success(safetyUser);
+    }
+
+    @PostMapping("/current/update")
+    public BaseResponse<Boolean> currentUserUpdate(@RequestBody CurrentUserUpdateRequest currentUserRequest, HttpServletRequest request){
+        if (currentUserRequest == null) throw new BusinessException(StatusCode.PARAMS_ERROR);
+        User newCurrentUser = new User();
+        newCurrentUser.setId(currentUserRequest.getId());
+        newCurrentUser.setAge(currentUserRequest.getAge());
+        newCurrentUser.setAvatarUrl(currentUserRequest.getAvatarUrl());
+        newCurrentUser.setTechnicalStack(currentUserRequest.getTechnicalStack());
+        newCurrentUser.setProgrammingSkills(currentUserRequest.getProgrammingSkills());
+        newCurrentUser.setIntendedTeammates(currentUserRequest.getIntendedTeammates());
+        Boolean isUpdated = userService.currentUserUpdate(request, newCurrentUser);
+        return ResponseUtils.success(isUpdated);
     }
 }

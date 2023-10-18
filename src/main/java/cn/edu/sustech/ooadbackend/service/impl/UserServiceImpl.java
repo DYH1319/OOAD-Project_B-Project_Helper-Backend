@@ -7,6 +7,7 @@ import cn.edu.sustech.ooadbackend.mapper.UserMapper;
 import cn.edu.sustech.ooadbackend.model.domain.User;
 import cn.edu.sustech.ooadbackend.service.UserService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
@@ -118,5 +119,31 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         safetyUser.setIntendedTeammates(originUser.getIntendedTeammates());
         safetyUser.setCreateTime(originUser.getCreateTime());
         return safetyUser;
+    }
+
+    @Override
+    public Boolean currentUserUpdate(HttpServletRequest request, User user) {
+        // 获取当前用户态
+        // 1.判断用户是否处于登陆状态
+        User currentUser = (User)request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN, "用户未登陆");
+
+        // 2.判断用户是否在进行非法撰写
+        if (!currentUser.getId().equals(user.getId())) throw new BusinessException(StatusCode.NO_AUTH, "无权限修改当前用户");
+
+        User oldCurrentUser = this.getById(currentUser.getId());
+
+        if (oldCurrentUser == null) throw new BusinessException(StatusCode.NULL_ERROR, "修改的当前用户不存在");
+        oldCurrentUser.setAge(user.getAge());
+        oldCurrentUser.setAvatarUrl(user.getAvatarUrl());
+        oldCurrentUser.setTechnicalStack(user.getTechnicalStack());
+        oldCurrentUser.setProgrammingSkills(user.getProgrammingSkills());
+        oldCurrentUser.setIntendedTeammates(user.getIntendedTeammates());
+
+        QueryWrapper<User> currentUserUpdateWrapper = new QueryWrapper<>();
+        currentUserUpdateWrapper.eq("id", oldCurrentUser.getId());
+        Boolean update = this.update(oldCurrentUser, currentUserUpdateWrapper);
+        if (!update) throw new BusinessException(StatusCode.SYSTEM_ERROR, "无法修改当前用户信息");
+        return update;
     }
 }

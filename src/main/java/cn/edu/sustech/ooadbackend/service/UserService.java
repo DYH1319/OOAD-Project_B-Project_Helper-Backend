@@ -43,4 +43,11 @@ public interface UserService extends IService<User> {
      * @return 当前登录的用户
      */
     User getCurrentUser(HttpServletRequest request);
+
+    /**
+     * 更新当前用户个人信息
+     * @param user 当前用户已修改的个人信息
+     * @return 是否修改成功
+     */
+    Boolean currentUserUpdate(HttpServletRequest request, User user);
 }
