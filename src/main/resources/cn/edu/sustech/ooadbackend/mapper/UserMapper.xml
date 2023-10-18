@@ -26,4 +26,10 @@
     technical_stack, programming_skills, intended_teammates, is_deleted, create_time, 
     update_time
   </sql>
+
+  <update id="updateCurrentUser" parameterType="cn.edu.sustech.ooadbackend.model.domain.User">
+    update t_user set age = #{age}, avatar_url = #{avatarUrl}, technical_stack = #{technicalStack}, programming_skills = #{programmingSkills}, intended_teammates = #{intendedTeammates} where id = #{id};
+  </update>
+
+
 </mapper>

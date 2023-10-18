@@ -1,6 +1,7 @@
 package cn.edu.sustech.ooadbackend.service;
 
 import cn.edu.sustech.ooadbackend.model.domain.User;
+import cn.edu.sustech.ooadbackend.model.request.CurrentUserUpdateRequest;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -46,8 +47,8 @@ public interface UserService extends IService<User> {
 
     /**
      * 更新当前用户个人信息
-     * @param user 当前用户已修改的个人信息
+     * @param currentUserRequest 包含当前用户已修改的个人信息请求
      * @return 是否修改成功
      */
-    Boolean currentUserUpdate(HttpServletRequest request, User user);
+    Boolean currentUserUpdate(HttpServletRequest request, CurrentUserUpdateRequest currentUserRequest);
 }

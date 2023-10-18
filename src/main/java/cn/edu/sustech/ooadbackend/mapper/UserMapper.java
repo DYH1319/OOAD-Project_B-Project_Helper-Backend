@@ -3,6 +3,7 @@ package cn.edu.sustech.ooadbackend.mapper;
 import cn.edu.sustech.ooadbackend.model.domain.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 
 /**
@@ -14,4 +15,7 @@ import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
 public interface UserMapper extends BaseMapper<User> {
+
+    boolean updateCurrentUser(User newUser);
+
 }

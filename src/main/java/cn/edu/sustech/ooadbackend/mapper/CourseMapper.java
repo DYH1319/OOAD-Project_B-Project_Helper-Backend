@@ -14,4 +14,6 @@ import org.apache.ibatis.annotations.Mapper;
     
 @Mapper
 public interface CourseMapper extends BaseMapper<Course> {
+    boolean updateCourse(Course newCourse);
+
 }

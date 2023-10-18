@@ -23,9 +23,19 @@ public interface UserConstant {
     /**
      * 默认权限
      */
-    int DEFAULT_ROLE = 0;
+    int STUDENT_ROLE = 0;
+
+    /**
+     * 助教权限
+     */
+    int TEACHER_ASSISTANT_ROLE = 1;
+
+    /**
+     * 老师权限
+     */
+    int TEACHER_ROLE = 2;
     /**
      * 管理员权限
      */
-    int ADMIN_ROLE = 1;
+    int ADMIN_ROLE = 3;
 }

@@ -2,7 +2,9 @@ package cn.edu.sustech.ooadbackend.service;
 
 import cn.edu.sustech.ooadbackend.model.domain.UserCourse;
 import com.baomidou.mybatisplus.extension.service.IService;
-    
+
+import java.util.List;
+
 /**
  * @className UserCourseService
  * @version 1.0
@@ -12,5 +14,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
     
 public interface UserCourseService extends IService<UserCourse>{
 
+    public List<UserCourse> listUserCourseByUserId(Long id);
 
 }

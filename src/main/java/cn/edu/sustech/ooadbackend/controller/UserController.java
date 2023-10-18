@@ -81,14 +81,9 @@ public class UserController {
     @PostMapping("/current/update")
     public BaseResponse<Boolean> currentUserUpdate(@RequestBody CurrentUserUpdateRequest currentUserRequest, HttpServletRequest request){
         if (currentUserRequest == null) throw new BusinessException(StatusCode.PARAMS_ERROR);
-        User newCurrentUser = new User();
-        newCurrentUser.setId(currentUserRequest.getId());
-        newCurrentUser.setAge(currentUserRequest.getAge());
-        newCurrentUser.setAvatarUrl(currentUserRequest.getAvatarUrl());
-        newCurrentUser.setTechnicalStack(currentUserRequest.getTechnicalStack());
-        newCurrentUser.setProgrammingSkills(currentUserRequest.getProgrammingSkills());
-        newCurrentUser.setIntendedTeammates(currentUserRequest.getIntendedTeammates());
-        Boolean isUpdated = userService.currentUserUpdate(request, newCurrentUser);
+        Boolean isUpdated = userService.currentUserUpdate(request, currentUserRequest);
+
         return ResponseUtils.success(isUpdated);
     }
+
 }

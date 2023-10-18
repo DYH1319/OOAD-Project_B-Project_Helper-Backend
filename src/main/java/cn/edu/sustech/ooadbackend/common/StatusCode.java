@@ -13,7 +13,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum StatusCode {
-    SUCCESS(0, "OK", "成功"),
+    SUCCESS(20000, "OK", "成功"),
     PARAMS_ERROR(40000, "请求参数错误", ""),
     NULL_ERROR(40001, "响应数据为空", ""),
     NOT_LOGIN(40100, "未登录", ""),

@@ -15,4 +15,8 @@
     <!--@mbg.generated-->
     id, course_name, teacher_id, is_deleted, create_time, update_time
   </sql>
+  <update id="updateCourse" parameterType="cn.edu.sustech.ooadbackend.model.domain.Course">
+    update t_course set course_name = #{courseName}, teacher_id = #{teacherId} where id = #{id};
+  </update>
+
 </mapper>
