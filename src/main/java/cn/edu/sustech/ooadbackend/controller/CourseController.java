@@ -15,10 +15,8 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 
@@ -30,7 +28,8 @@ import java.util.List;
  * @Date: 2023/10/18 12:21
  * @Version:1.0
  */
-@RestController("/course")
+@RestController
+@RequestMapping("/course")
 public class CourseController {
     @Resource
     private CourseService courseService;
