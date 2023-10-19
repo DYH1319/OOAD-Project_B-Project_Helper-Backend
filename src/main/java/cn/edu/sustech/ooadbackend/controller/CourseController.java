@@ -30,7 +30,7 @@ import java.util.List;
  * @Date: 2023/10/18 12:21
  * @Version:1.0
  */
-@RestController
+@RestController("/course")
 public class CourseController {
     @Resource
     private CourseService courseService;
@@ -40,7 +40,7 @@ public class CourseController {
      * @param request HttpServletRequest
      * @return 用户列表
      */
-    @GetMapping("/course/list")
+    @GetMapping("/list")
     public BaseResponse<Course[]> listCourse(HttpServletRequest request){
         if (request == null) throw new BusinessException(StatusCode.SYSTEM_ERROR);
         List<Course> courseList = courseService.listCourse(request);
@@ -53,7 +53,7 @@ public class CourseController {
      * @param courseUpdateRequest 更新的课程信息
      * @return 是否成功更新
      */
-    @PostMapping("/course/update")
+    @PostMapping("/update")
     public BaseResponse<Boolean> updateCourse(HttpServletRequest request, @RequestBody CourseUpdateRequest courseUpdateRequest){
 
         // 获取用户登录态
