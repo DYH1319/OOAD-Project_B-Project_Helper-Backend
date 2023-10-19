@@ -16,4 +16,9 @@ public interface TeacherAssistantCourseService extends IService<TeacherAssistant
 
     List<TeacherAssistantCourse> listByTeacherAssistantId(Long id);
 
+    List<TeacherAssistantCourse> listByCourseId(Long id);
+
+    Boolean removeByCourseId(Long id);
+
+
 }

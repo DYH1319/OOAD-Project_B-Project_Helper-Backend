@@ -12,6 +12,7 @@ import cn.edu.sustech.ooadbackend.model.request.CourseUpdateRequest;
 import cn.edu.sustech.ooadbackend.service.CourseService;
 import cn.edu.sustech.ooadbackend.service.TeacherAssistantCourseService;
 import cn.edu.sustech.ooadbackend.service.UserCourseService;
+import cn.edu.sustech.ooadbackend.service.UserService;
 import cn.edu.sustech.ooadbackend.utils.ResponseUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -19,8 +20,13 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * @className CourseServiceImpl
@@ -31,6 +37,9 @@ import java.util.List;
     
 @Service
 public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> implements CourseService{
+
+    @Resource
+    private UserService userService;
 
     @Resource
     private CourseMapper courseMapper;
@@ -95,6 +104,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     }
 
     @Override
+    @Transactional
     public Boolean updateCourse(CourseUpdateRequest courseUpdateRequest) {
         Course course = new Course();
         course.setId(courseUpdateRequest.getId());
@@ -103,7 +113,34 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
         Boolean isUpdated = courseMapper.updateCourse(course);
         if (!isUpdated) throw new BusinessException(StatusCode.PARAMS_ERROR, "课程信息更新失败");
-        return isUpdated;
+
+        // 校验助教Id列表是否合法
+        QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+        userQueryWrapper.eq("user_role", UserConstant.TEACHER_ASSISTANT_ROLE);
+        List<User> taUserList = userService.list(userQueryWrapper);
+        Long[] toIdList = taUserList.stream().map(User::getId).toList().toArray(Long[] :: new);
+        Long[] newtTaIdList = courseUpdateRequest.getTaIdList();
+        if (!new HashSet<>(Arrays.asList(toIdList)).containsAll(Arrays.asList(newtTaIdList))) throw new BusinessException(StatusCode.PARAMS_ERROR, "助教列表中含有非法用户");
+
+        teacherAssistantCourseService.removeByCourseId(courseUpdateRequest.getId());
+
+        List<TeacherAssistantCourse> newTeacherAssistantCourses = Arrays.stream(newtTaIdList).map(aLong -> {
+            TeacherAssistantCourse teacherAssistantCourse = new TeacherAssistantCourse();
+            teacherAssistantCourse.setCourseId(courseUpdateRequest.getId());
+            teacherAssistantCourse.setTeacherAssistantId(aLong);
+            return teacherAssistantCourse;
+        }).toList();
+
+        Boolean saveBatch = teacherAssistantCourseService.saveBatch(newTeacherAssistantCourses);
+        if (saveBatch != true) throw new BusinessException(StatusCode.PARAMS_ERROR, "课程信息更新失败");
+
+        return saveBatch;
+    }
+
+    public Boolean deleteCourse(Long courseId){
+        QueryWrapper<Course> courseQueryWrapper = new QueryWrapper<>();
+        courseQueryWrapper.eq("course_id", courseId);
+        this.remove()
     }
 
     private Course getSafetyCourse(Course course){

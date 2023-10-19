@@ -23,11 +23,28 @@ public class TeacherAssistantCourseServiceImpl extends ServiceImpl<TeacherAssist
 
     @Override
     public List<TeacherAssistantCourse> listByTeacherAssistantId(Long id) {
-        // 获取教师助理对应的课程id列表
+        // 获取教师助理对应的课程关系列表
         QueryWrapper<TeacherAssistantCourse> teacherAssistantCourseQueryWrapper = new QueryWrapper<>();
         teacherAssistantCourseQueryWrapper.eq("teacher_assistant_id", id);
         List<TeacherAssistantCourse> teacherAssistantCourseList = this.list(teacherAssistantCourseQueryWrapper);
         if (teacherAssistantCourseList == null || teacherAssistantCourseList.isEmpty()) throw new BusinessException(StatusCode.NULL_ERROR, "查找不到用户的课程信息");
         return teacherAssistantCourseList;
+    }
+
+    @Override
+    public List<TeacherAssistantCourse> listByCourseId(Long id) {
+        // 获取课程对应的课程关系列表
+        QueryWrapper<TeacherAssistantCourse> teacherAssistantCourseQueryWrapper = new QueryWrapper<>();
+        teacherAssistantCourseQueryWrapper.eq("course_id", id);
+        List<TeacherAssistantCourse> teacherAssistantCourseList = this.list(teacherAssistantCourseQueryWrapper);
+        if (teacherAssistantCourseList == null || teacherAssistantCourseList.isEmpty()) throw new BusinessException(StatusCode.NULL_ERROR, "查找不到课程信息");
+        return teacherAssistantCourseList;
+    }
+
+    @Override
+    public Boolean removeByCourseId(Long id) {
+        QueryWrapper<TeacherAssistantCourse> teacherAssistantCourseQueryWrapper = new QueryWrapper<>();
+        teacherAssistantCourseQueryWrapper.eq("course_id", id);
+        return this.remove(teacherAssistantCourseQueryWrapper);
     }
 }

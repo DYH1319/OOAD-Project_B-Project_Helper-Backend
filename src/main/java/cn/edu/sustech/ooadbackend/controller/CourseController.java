@@ -6,6 +6,7 @@ import cn.edu.sustech.ooadbackend.constant.UserConstant;
 import cn.edu.sustech.ooadbackend.exception.BusinessException;
 import cn.edu.sustech.ooadbackend.model.domain.Course;
 import cn.edu.sustech.ooadbackend.model.domain.User;
+import cn.edu.sustech.ooadbackend.model.request.CourseInsertRequest;
 import cn.edu.sustech.ooadbackend.model.request.CourseUpdateRequest;
 import cn.edu.sustech.ooadbackend.service.CourseService;
 import cn.edu.sustech.ooadbackend.service.TeacherAssistantCourseService;
@@ -55,6 +56,9 @@ public class CourseController {
     @PostMapping("/update")
     public BaseResponse<Boolean> updateCourse(HttpServletRequest request, @RequestBody CourseUpdateRequest courseUpdateRequest){
 
+        // 校验参数
+        if (courseUpdateRequest == null) throw new BusinessException(StatusCode.PARAMS_ERROR, "更新课程参数出错");
+
         // 获取用户登录态
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
 
@@ -68,12 +72,47 @@ public class CourseController {
         return ResponseUtils.success(updated);
     }
 
+    /**
+     * 删除课程信息
+     * @param request HttpServletRequest
+     * @param courseId 待删除的课程ID
+     * @return 是否成功删除
+     */
+    @PostMapping("/delete")
+    public BaseResponse<Boolean> deleteCourse(HttpServletRequest request, @RequestBody Long courseId){
 
-    @Data
-    @AllArgsConstructor
-    static
-    class CourseInfo{
-        private Long id;
-        private String courseName;
+        // 校验参数
+        if (courseId == null || courseId <= 0) throw new BusinessException(StatusCode.PARAMS_ERROR, "删除课程参数出错");
+
+        // 获取用户登录态
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        // 确认用户是否登录
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+
+        // 确认用户是否有管理员权限
+        if (currentUser.getUserRole() != UserConstant.ADMIN_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非管理员用户不能修改课程信息");
+
     }
+
+    /**
+     * 新增课程信息
+     * @param request HttpServletRequest
+     * @param courseId 新增课程信息的包装
+     * @return 新增课程ID
+     */
+    @PostMapping("/insert")
+    public BaseResponse<Long> insertCourse(HttpServletRequest request, @RequestBody CourseInsertRequest courseId){
+
+        // 获取用户登录态
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        // 确认用户是否登录
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+
+        // 确认用户是否有管理员权限
+        if (currentUser.getUserRole() != UserConstant.ADMIN_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非管理员用户不能修改课程信息");
+        return null;
+    }
+
 }
