@@ -1,9 +1,7 @@
 package cn.edu.sustech.ooadbackend.model.domain;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+
 import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -44,6 +42,7 @@ public class UserCourse {
      * 是否逻辑删除，默认值为正常(0)，非空<br/>0：正常，1：已被逻辑删除
      */
     @TableField(value = "is_deleted")
+    @TableLogic
     private Byte isDeleted;
 
     /**

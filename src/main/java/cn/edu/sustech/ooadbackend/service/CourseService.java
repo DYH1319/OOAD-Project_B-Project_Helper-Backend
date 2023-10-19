@@ -1,6 +1,7 @@
 package cn.edu.sustech.ooadbackend.service;
 
 import cn.edu.sustech.ooadbackend.model.domain.Course;
+import cn.edu.sustech.ooadbackend.model.request.CourseInsertRequest;
 import cn.edu.sustech.ooadbackend.model.request.CourseUpdateRequest;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,5 +30,19 @@ public interface CourseService extends IService<Course>{
      * @return 是否更新成功
      */
     public Boolean updateCourse(CourseUpdateRequest courseUpdateRequest);
+
+    /**
+     * 删除对应id的课程
+     * @param courseId 课程ID
+     * @return 是否删除完成
+     */
+    public Boolean deleteCourse(Long courseId);
+
+    /**
+     * 新增课程
+     * @param courseInsertRequest 来自前段的课程信息
+     * @return 是否删除完成
+     */
+    public Long insertCourse(CourseInsertRequest courseInsertRequest);
 
 }

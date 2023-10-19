@@ -8,6 +8,7 @@ import cn.edu.sustech.ooadbackend.model.domain.Course;
 import cn.edu.sustech.ooadbackend.model.domain.TeacherAssistantCourse;
 import cn.edu.sustech.ooadbackend.model.domain.User;
 import cn.edu.sustech.ooadbackend.model.domain.UserCourse;
+import cn.edu.sustech.ooadbackend.model.request.CourseInsertRequest;
 import cn.edu.sustech.ooadbackend.model.request.CourseUpdateRequest;
 import cn.edu.sustech.ooadbackend.service.CourseService;
 import cn.edu.sustech.ooadbackend.service.TeacherAssistantCourseService;
@@ -118,13 +119,13 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
         userQueryWrapper.eq("user_role", UserConstant.TEACHER_ASSISTANT_ROLE);
         List<User> taUserList = userService.list(userQueryWrapper);
-        Long[] toIdList = taUserList.stream().map(User::getId).toList().toArray(Long[] :: new);
-        Long[] newtTaIdList = courseUpdateRequest.getTaIdList();
-        if (!new HashSet<>(Arrays.asList(toIdList)).containsAll(Arrays.asList(newtTaIdList))) throw new BusinessException(StatusCode.PARAMS_ERROR, "助教列表中含有非法用户");
+        List<Long> toIdList = taUserList.stream().map(User::getId).toList();
+        List<Long> newtTaIdList = Arrays.asList(courseUpdateRequest.getTaIdList());
+        if (!new HashSet<>(toIdList).containsAll(newtTaIdList)) throw new BusinessException(StatusCode.PARAMS_ERROR, "助教列表中含有非法用户");
 
         teacherAssistantCourseService.removeByCourseId(courseUpdateRequest.getId());
 
-        List<TeacherAssistantCourse> newTeacherAssistantCourses = Arrays.stream(newtTaIdList).map(aLong -> {
+        List<TeacherAssistantCourse> newTeacherAssistantCourses = newtTaIdList.stream().map(aLong -> {
             TeacherAssistantCourse teacherAssistantCourse = new TeacherAssistantCourse();
             teacherAssistantCourse.setCourseId(courseUpdateRequest.getId());
             teacherAssistantCourse.setTeacherAssistantId(aLong);
@@ -137,10 +138,60 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         return saveBatch;
     }
 
+    @Override
+    @Transactional
     public Boolean deleteCourse(Long courseId){
+
+        // 删除课程表中的数据
         QueryWrapper<Course> courseQueryWrapper = new QueryWrapper<>();
-        courseQueryWrapper.eq("course_id", courseId);
-        this.remove()
+        courseQueryWrapper.eq("id", courseId);
+        Boolean courseRemoved = this.remove(courseQueryWrapper);
+//        if (!courseRemoved) throw new BusinessException(StatusCode.PARAMS_ERROR, "课程信息删除失败");
+
+        // 删除助教课程关系表中的相关数据
+        QueryWrapper<TeacherAssistantCourse> TACourseQueryWrapper = new QueryWrapper<>();
+        TACourseQueryWrapper.eq("course_id", courseId);
+        boolean taCourseRemoved = teacherAssistantCourseService.remove(TACourseQueryWrapper);
+
+        // 删除学生课程关系表中的相关数据
+        QueryWrapper<UserCourse> UserCourseQueryWrapper = new QueryWrapper<>();
+        UserCourseQueryWrapper.eq("course_id", courseId);
+        boolean userCourseRemoved = userCourseService.remove(UserCourseQueryWrapper);
+
+        return courseRemoved;
+    }
+
+    @Override
+    @Transactional
+    public Long insertCourse(CourseInsertRequest courseInsertRequest) {
+
+        Course course = new Course();
+        course.setTeacherId(courseInsertRequest.getTeacherId());
+        course.setCourseName(courseInsertRequest.getCourseName());
+
+        Boolean isInsert = this.save(course);
+        if (!isInsert) throw new BusinessException(StatusCode.PARAMS_ERROR, "课程新增更新失败");
+
+        // 校验助教Id列表是否合法
+        QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+        userQueryWrapper.eq("user_role", UserConstant.TEACHER_ASSISTANT_ROLE);
+        List<User> taUserList = userService.list(userQueryWrapper);
+        List<Long> toIdList = taUserList.stream().map(User::getId).toList();
+        List<Long> newtTaIdList = Arrays.asList(courseInsertRequest.getTaIdList());
+        if (!new HashSet<>(toIdList).containsAll(newtTaIdList)) throw new BusinessException(StatusCode.PARAMS_ERROR, "助教列表中含有非法用户");
+
+
+        List<TeacherAssistantCourse> newTeacherAssistantCourses = newtTaIdList.stream().map(aLong -> {
+            TeacherAssistantCourse teacherAssistantCourse = new TeacherAssistantCourse();
+            teacherAssistantCourse.setCourseId(course.getId());
+            teacherAssistantCourse.setTeacherAssistantId(aLong);
+            return teacherAssistantCourse;
+        }).toList();
+
+        Boolean saveBatch = teacherAssistantCourseService.saveBatch(newTeacherAssistantCourses);
+        if (!saveBatch) throw new BusinessException(StatusCode.PARAMS_ERROR, "课程信息插入失败");
+
+        return course.getId();
     }
 
     private Course getSafetyCourse(Course course){
@@ -149,5 +200,4 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         safetyCourse.setCourseName(course.getCourseName());
         return safetyCourse;
     }
-
 }

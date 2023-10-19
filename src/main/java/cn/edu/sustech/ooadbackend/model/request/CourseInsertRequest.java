@@ -13,11 +13,6 @@ import lombok.Data;
 @Data
 public class CourseInsertRequest {
     /**
-     * 课程id
-     */
-    private Long id;
-
-    /**
      * 课程名称
      */
     private String courseName;

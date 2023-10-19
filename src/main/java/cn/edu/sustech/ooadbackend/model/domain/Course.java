@@ -42,6 +42,7 @@ public class Course {
      * 是否逻辑删除，默认值为正常(0)，非空<br/>0：正常，1：已被逻辑删除
      */
     @TableField(value = "is_deleted")
+    @TableLogic
     private Byte isDeleted;
 
     /**

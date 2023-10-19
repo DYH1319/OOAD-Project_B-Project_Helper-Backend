@@ -6,6 +6,7 @@ import cn.edu.sustech.ooadbackend.constant.UserConstant;
 import cn.edu.sustech.ooadbackend.exception.BusinessException;
 import cn.edu.sustech.ooadbackend.model.domain.Course;
 import cn.edu.sustech.ooadbackend.model.domain.User;
+import cn.edu.sustech.ooadbackend.model.request.CourseDeleteRequest;
 import cn.edu.sustech.ooadbackend.model.request.CourseInsertRequest;
 import cn.edu.sustech.ooadbackend.model.request.CourseUpdateRequest;
 import cn.edu.sustech.ooadbackend.service.CourseService;
@@ -16,6 +17,7 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -79,10 +81,10 @@ public class CourseController {
      * @return 是否成功删除
      */
     @PostMapping("/delete")
-    public BaseResponse<Boolean> deleteCourse(HttpServletRequest request, @RequestBody Long courseId){
+    public BaseResponse<Boolean> deleteCourse(HttpServletRequest request, @RequestBody CourseDeleteRequest courseDeleteRequest){
 
         // 校验参数
-        if (courseId == null || courseId <= 0) throw new BusinessException(StatusCode.PARAMS_ERROR, "删除课程参数出错");
+        if (courseDeleteRequest == null || courseDeleteRequest.getCourseId() <= 0) throw new BusinessException(StatusCode.PARAMS_ERROR, "删除课程参数出错");
 
         // 获取用户登录态
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
@@ -93,6 +95,8 @@ public class CourseController {
         // 确认用户是否有管理员权限
         if (currentUser.getUserRole() != UserConstant.ADMIN_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非管理员用户不能修改课程信息");
 
+        Boolean deleted = courseService.deleteCourse(courseDeleteRequest.getCourseId());
+        return ResponseUtils.success(deleted, "成功删除课程信息");
     }
 
     /**
@@ -112,7 +116,9 @@ public class CourseController {
 
         // 确认用户是否有管理员权限
         if (currentUser.getUserRole() != UserConstant.ADMIN_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非管理员用户不能修改课程信息");
-        return null;
+
+        Long insertCourse = courseService.insertCourse(courseId);
+        return ResponseUtils.success(insertCourse, "成功新增课程");
     }
 
 }
