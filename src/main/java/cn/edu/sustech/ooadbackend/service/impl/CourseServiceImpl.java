@@ -23,11 +23,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @className CourseServiceImpl
@@ -192,6 +191,107 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         if (!saveBatch) throw new BusinessException(StatusCode.PARAMS_ERROR, "课程信息插入失败");
 
         return course.getId();
+    }
+
+    @Override
+    public Boolean isCourseTeacher(Long userId, Long courseId) {
+
+        // 从数据库course中查找是否存在符合userId和courseId的数据段
+        QueryWrapper<Course> courseQueryWrapper = new QueryWrapper<>();
+        courseQueryWrapper.eq("id", courseId);
+        courseQueryWrapper.eq("teacher_id", userId);
+
+        Course targetCourse = this.getOne(courseQueryWrapper);
+        if (targetCourse == null) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    @Override
+    public Boolean addCourseStudents(Long[] studentIds, Long courseId) {
+
+        // TODO: 验证添加的学生身份以及是否存在
+
+        List<UserCourse> userCourseList = userCourseService.listUserCourseByCourseId(courseId);
+
+        List<Long> studentsIds = userCourseList.stream().map(UserCourse::getUserId).toList();
+
+        List<Long> newStudentsIds = Arrays.stream(studentIds).toList();
+
+        if (!Collections.disjoint(studentsIds, newStudentsIds)) throw new BusinessException(StatusCode.PARAMS_ERROR, "学生列表中存在已在课程中的学生");
+
+        List<UserCourse> newUserCourseList = newStudentsIds.stream().map(studentId -> {
+            UserCourse userCourse = new UserCourse();
+            userCourse.setCourseId(courseId);
+            userCourse.setUserId(studentId);
+            return userCourse;
+        }).toList();
+
+        boolean b = userCourseService.saveBatch(newUserCourseList);
+
+        if (!b) throw new BusinessException(StatusCode.PARAMS_ERROR, "向课程中添加新学生失败");
+
+        return b;
+    }
+
+    @Override
+    public Boolean addCourseTas(Long[] taIds, Long courseId) {
+
+        // TODO: 验证添加的TA身份以及是否存在
+        List<TeacherAssistantCourse> assistantCourseList = teacherAssistantCourseService.listByCourseId(courseId);
+
+        List<Long> taIdLists = assistantCourseList.stream().map(TeacherAssistantCourse::getTeacherAssistantId).toList();
+
+        List<Long> newTaList = Arrays.stream(taIds).toList();
+
+        if (!Collections.disjoint(newTaList, taIdLists)) throw new BusinessException(StatusCode.PARAMS_ERROR, "添加的TA已存在于课程中");
+
+        List<TeacherAssistantCourse> newUserCourseList = newTaList.stream().map(studentId -> {
+            TeacherAssistantCourse userCourse = new TeacherAssistantCourse();
+            userCourse.setCourseId(courseId);
+            userCourse.setId(studentId);
+            return userCourse;
+        }).toList();
+
+        boolean b = teacherAssistantCourseService.saveBatch(newUserCourseList);
+
+        if (!b) throw new BusinessException(StatusCode.SYSTEM_ERROR, "新增课程TA时发生错误");
+
+        return b;
+    }
+
+    @Override
+    public Boolean removeCourseStudents(Long[] studentIds, Long courseId) {
+
+        // TODO: 验证添加的学生身份以及是否存在
+
+        QueryWrapper<UserCourse> userCourseQueryWrapper = new QueryWrapper<>();
+
+        userCourseQueryWrapper.eq("course_id", courseId);
+        userCourseQueryWrapper.and(wrapper -> wrapper.in("user_id", (Object) studentIds));
+
+        boolean removed = userCourseService.remove(userCourseQueryWrapper);
+
+        if (!removed) throw new BusinessException(StatusCode.SYSTEM_ERROR, "删除课程学生时发生系统错误");
+
+        return removed;
+    }
+
+    @Override
+    public Boolean removeCourseTas(Long[] taIds, Long courseId) {
+
+        // TODO: 验证添加的TA身份以及是否存在
+        QueryWrapper<TeacherAssistantCourse> userCourseQueryWrapper = new QueryWrapper<>();
+
+        userCourseQueryWrapper.eq("course_id", courseId);
+        userCourseQueryWrapper.and(wrapper -> wrapper.in("teacher_assistant_id", (Object) taIds));
+
+        boolean removed = teacherAssistantCourseService.remove(userCourseQueryWrapper);
+
+        if (!removed) throw new BusinessException(StatusCode.SYSTEM_ERROR, "删除TA时发生系统错误");
+        return removed;
     }
 
     private Course getSafetyCourse(Course course){

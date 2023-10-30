@@ -16,4 +16,6 @@ public interface UserCourseService extends IService<UserCourse>{
 
     public List<UserCourse> listUserCourseByUserId(Long id);
 
+    public List<UserCourse> listUserCourseByCourseId(Long id);
+
 }

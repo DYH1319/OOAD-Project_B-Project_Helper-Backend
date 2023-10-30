@@ -20,5 +20,13 @@ public interface TeacherAssistantCourseService extends IService<TeacherAssistant
 
     Boolean removeByCourseId(Long id);
 
+    /**
+     * 检查用户是否为指定课程的TA
+     * @param user 待认证的用户
+     * @param courseId 指定的课程id
+     * @return 是否是该课程的TA
+     */
+    public boolean isCourseTa(Long userId, Long courseId);
+
 
 }

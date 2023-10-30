@@ -1,6 +1,7 @@
 package cn.edu.sustech.ooadbackend.service;
 
 import cn.edu.sustech.ooadbackend.model.domain.Course;
+import cn.edu.sustech.ooadbackend.model.domain.User;
 import cn.edu.sustech.ooadbackend.model.request.CourseInsertRequest;
 import cn.edu.sustech.ooadbackend.model.request.CourseUpdateRequest;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -44,5 +45,46 @@ public interface CourseService extends IService<Course>{
      * @return 是否删除完成
      */
     public Long insertCourse(CourseInsertRequest courseInsertRequest);
+
+    /**
+     * 检查用户是否为指定课程的老师
+     * @param userId 待认证的用户
+     * @param courseId 指定的课程id
+     * @return 是否是该课程的老师
+     */
+    public Boolean isCourseTeacher(Long userId, Long courseId);
+
+    /**
+     * 向特定课程添加学生
+     * @param studentIds 特定学生id列表
+     * @param courseId 指定的课程id
+     * @return 是否添加成功
+     */
+    public Boolean addCourseStudents(Long[] studentIds, Long courseId);
+
+
+    /**
+     * 向特定课程添加TA
+     * @param taIds 特定TAid列表
+     * @param courseId 指定的课程id
+     * @return
+     */
+    public Boolean addCourseTas(Long[] taIds, Long courseId);
+
+    /**
+     * 向特定课程删除学生
+     * @param studentIds 特定删除的学生id列表
+     * @param courseId 指定的课程id
+     * @return
+     */
+    public Boolean removeCourseStudents(Long[] studentIds, Long courseId);
+
+    /**
+     * 向特定课程删除TA
+     * @param taIds 特定删除的TAid列表
+     * @param courseId 指定的课程id
+     * @return
+     */
+    public Boolean removeCourseTas(Long[] taIds, Long courseId);
 
 }

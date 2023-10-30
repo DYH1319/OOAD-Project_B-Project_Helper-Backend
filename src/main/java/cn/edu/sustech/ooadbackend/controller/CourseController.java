@@ -11,6 +11,8 @@ import cn.edu.sustech.ooadbackend.model.request.CourseInsertRequest;
 import cn.edu.sustech.ooadbackend.model.request.CourseModifyMembersRequest;
 import cn.edu.sustech.ooadbackend.model.request.CourseUpdateRequest;
 import cn.edu.sustech.ooadbackend.service.CourseService;
+import cn.edu.sustech.ooadbackend.service.TeacherAssistantCourseService;
+import cn.edu.sustech.ooadbackend.service.UserCourseService;
 import cn.edu.sustech.ooadbackend.utils.ResponseUtils;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,6 +34,9 @@ import java.util.List;
 public class CourseController {
     @Resource
     private CourseService courseService;
+
+    @Resource
+    private TeacherAssistantCourseService teacherAssistantCourseService;
 
     /**
      * 获取课程列表
@@ -133,7 +138,12 @@ public class CourseController {
         // 确认用户是否登录
         if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
 
-        return null;
+        // 确认用户是否为管理员或者课程老师
+        if (!(currentUser.getUserRole() == UserConstant.ADMIN_ROLE || courseService.isCourseTeacher(currentUser.getId(), courseAddTaRequest.getCourseId()))) throw new BusinessException(StatusCode.NO_AUTH, "您无权修改该课程的信息");
+
+        Boolean b = courseService.addCourseTas(courseAddTaRequest.getTaId(), courseAddTaRequest.getCourseId());
+
+        return ResponseUtils.success(b);
     }
 
     /**
@@ -151,8 +161,12 @@ public class CourseController {
         // 确认用户是否登录
         if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
 
+        // 确认是否为该课程老师，管理员或者该课程TA
+        if (!(currentUser.getUserRole() == UserConstant.ADMIN_ROLE || (currentUser.getUserRole() == UserConstant.TEACHER_ROLE && courseService.isCourseTeacher(currentUser.getId(), courseAddStudentRequest.getCourseId())) || (currentUser.getUserRole() == UserConstant.TEACHER_ASSISTANT_ROLE && teacherAssistantCourseService.isCourseTa(currentUser.getId(), courseAddStudentRequest.getCourseId())))) throw new BusinessException(StatusCode.NO_AUTH, "您无权修改该课程的信息");
 
-        return null;
+        Boolean b = courseService.addCourseStudents(courseAddStudentRequest.getStudentId(), courseAddStudentRequest.getCourseId());
+
+        return ResponseUtils.success(b);
     }
 
     /**
@@ -170,8 +184,12 @@ public class CourseController {
         // 确认用户是否登录
         if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
 
+        // 确认是否为该课程老师或管理员
+        if (!(currentUser.getUserRole() == UserConstant.ADMIN_ROLE ||(currentUser.getUserRole() == UserConstant.TEACHER_ASSISTANT_ROLE && courseService.isCourseTeacher(currentUser.getId(), courseRemoveTaRequest.getCourseId())))) throw new BusinessException(StatusCode.NO_AUTH, "您无权修改该课程的信息");
 
-        return null;
+        Boolean b = courseService.removeCourseTas(courseRemoveTaRequest.getTaId(), courseRemoveTaRequest.getCourseId());
+
+        return ResponseUtils.success(b);
     }
 
     /**
@@ -189,7 +207,12 @@ public class CourseController {
         // 确认用户是否登录
         if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
 
-        return null;
+        // 确认是否为课程老师，管理员或者课程TA
+        if (!(currentUser.getUserRole() == UserConstant.ADMIN_ROLE || (currentUser.getUserRole() == UserConstant.TEACHER_ROLE && courseService.isCourseTeacher(currentUser.getId(), courseRemoveStudentRequest.getCourseId())) || (currentUser.getUserRole() == UserConstant.TEACHER_ASSISTANT_ROLE && teacherAssistantCourseService.isCourseTa(currentUser.getId(), courseRemoveStudentRequest.getCourseId())))) throw new BusinessException(StatusCode.NO_AUTH, "您无权修改该课程的信息");
+
+        Boolean b = courseService.removeCourseStudents(courseRemoveStudentRequest.getStudentId(), courseRemoveStudentRequest.getCourseId());
+
+        return ResponseUtils.success(b);
     }
 
 }

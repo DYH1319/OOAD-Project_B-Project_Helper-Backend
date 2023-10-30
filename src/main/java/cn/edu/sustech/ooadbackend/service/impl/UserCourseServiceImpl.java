@@ -32,4 +32,16 @@ public class UserCourseServiceImpl extends ServiceImpl<UserCourseMapper, UserCou
         return userCourseList;
 
     }
+
+    @Override
+    public List<UserCourse> listUserCourseByCourseId(Long id) {
+
+        // 查询对应用户的课程关系
+        QueryWrapper<UserCourse> userCourseQueryWrapper = new QueryWrapper<>();
+        userCourseQueryWrapper.eq("course_id", id);
+        List<UserCourse> userCourseList = this.list(userCourseQueryWrapper);
+        if (userCourseList == null || userCourseList.isEmpty()) throw new BusinessException(StatusCode.NULL_ERROR, "查找不到用户的课程信息");
+        return userCourseList;
+
+    }
 }

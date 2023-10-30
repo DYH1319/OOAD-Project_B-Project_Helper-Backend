@@ -47,4 +47,22 @@ public class TeacherAssistantCourseServiceImpl extends ServiceImpl<TeacherAssist
         teacherAssistantCourseQueryWrapper.eq("course_id", id);
         return this.remove(teacherAssistantCourseQueryWrapper);
     }
+
+    @Override
+    public boolean isCourseTa(Long userId, Long courseId) {
+
+        // 从数据库teacher_assistant_course中查询是否存在userId和courseId符合的数据段
+        QueryWrapper<TeacherAssistantCourse> courseQueryWrapper = new QueryWrapper<>();
+        courseQueryWrapper.eq("course_id", courseId);
+        courseQueryWrapper.eq("teacher_assistant_id", userId);
+
+        TeacherAssistantCourse targetTeacherAssistantCourse = this.getOne(courseQueryWrapper);
+
+        if (targetTeacherAssistantCourse == null) {
+            return false;
+        } else {
+            return true;
+        }
+
+    }
 }
