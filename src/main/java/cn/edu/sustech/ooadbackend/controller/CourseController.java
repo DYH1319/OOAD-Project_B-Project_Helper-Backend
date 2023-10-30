@@ -8,16 +8,12 @@ import cn.edu.sustech.ooadbackend.model.domain.Course;
 import cn.edu.sustech.ooadbackend.model.domain.User;
 import cn.edu.sustech.ooadbackend.model.request.CourseDeleteRequest;
 import cn.edu.sustech.ooadbackend.model.request.CourseInsertRequest;
+import cn.edu.sustech.ooadbackend.model.request.CourseModifyMembersRequest;
 import cn.edu.sustech.ooadbackend.model.request.CourseUpdateRequest;
 import cn.edu.sustech.ooadbackend.service.CourseService;
-import cn.edu.sustech.ooadbackend.service.TeacherAssistantCourseService;
-import cn.edu.sustech.ooadbackend.service.UserCourseService;
 import cn.edu.sustech.ooadbackend.utils.ResponseUtils;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -77,7 +73,7 @@ public class CourseController {
     /**
      * 删除课程信息
      * @param request HttpServletRequest
-     * @param courseId 待删除的课程ID
+     * @param courseDeleteRequest 待删除的课程请求
      * @return 是否成功删除
      */
     @PostMapping("/delete")
@@ -119,6 +115,81 @@ public class CourseController {
 
         Long insertCourse = courseService.insertCourse(courseId);
         return ResponseUtils.success(insertCourse, "成功新增课程");
+
+    }
+
+    /**
+     * 新增课程的ta
+     * @param request HttpServletRequest 用户检验用户权限
+     * @param courseAddTaRequest 增加的课程ta信息
+     * @return 是否新增成功
+     */
+    @PostMapping("/add/ta")
+    public BaseResponse<Boolean> addCourseTa(HttpServletRequest request, @RequestBody CourseModifyMembersRequest courseAddTaRequest){
+
+        // 获取用户登录态
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        // 确认用户是否登录
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+
+        return null;
+    }
+
+    /**
+     * 新增指定课程的学生
+     * @param request HttpServletRequest 用户查询用户的权限
+     * @param courseAddStudentRequest 增加的课程学生信息
+     * @return 是否增加成功
+     */
+    @PostMapping("/add/student")
+    public BaseResponse<Boolean> addCourseStudent(HttpServletRequest request, @RequestBody CourseModifyMembersRequest courseAddStudentRequest){
+
+        // 获取用户登录态
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        // 确认用户是否登录
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+
+
+        return null;
+    }
+
+    /**
+     * 删除指定课程的ta
+     * @param request HttpServletRequest 用户查询用户的权限
+     * @param courseRemoveTaRequest 移除的课程ta信息
+     * @return 是否删除成功
+     */
+    @PostMapping("/remove/ta")
+    public BaseResponse<Boolean> removeCourseTa(HttpServletRequest request, @RequestBody CourseModifyMembersRequest courseRemoveTaRequest){
+
+        // 获取用户登录态
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        // 确认用户是否登录
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+
+
+        return null;
+    }
+
+    /**
+     * 删除特定课程的学生
+     * @param request HttpServletRequest 用户查询用户的权限
+     * @param courseRemoveStudentRequest 移除的课程学生信息
+     * @return 是否删除成功
+     */
+    @PostMapping("/remove/student")
+    public BaseResponse<Boolean> removeCourseStudent(HttpServletRequest request, @RequestBody CourseModifyMembersRequest courseRemoveStudentRequest){
+
+        // 获取用户登录态
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        // 确认用户是否登录
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+
+        return null;
     }
 
 }

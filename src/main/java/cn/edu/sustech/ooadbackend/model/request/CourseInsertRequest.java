@@ -6,7 +6,7 @@ import lombok.Data;
  * @className: CourseUpdateRequest
  * @Package: cn.edu.sustech.ooadbackend.model.request
  * @Description:
- * @Author: XXX
+ * @Author: Daniel
  * @Date: 2023/10/18 12:23
  * @Version:1.0
  */

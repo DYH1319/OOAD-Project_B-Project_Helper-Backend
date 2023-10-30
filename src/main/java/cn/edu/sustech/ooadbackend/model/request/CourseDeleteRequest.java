@@ -6,7 +6,7 @@ import lombok.Data;
  * @className: CourseDeleteRequest
  * @Package: cn.edu.sustech.ooadbackend.model.request
  * @Description:
- * @Author: XXX
+ * @Author: Daniel
  * @Date: 2023/10/19 13:23
  * @Version:1.0
  */
