@@ -139,7 +139,7 @@ public class CourseController {
         if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
 
         // 确认用户是否为管理员或者课程老师
-        if (!(currentUser.getUserRole() == UserConstant.ADMIN_ROLE || courseService.isCourseTeacher(currentUser.getId(), courseAddTaRequest.getCourseId()))) throw new BusinessException(StatusCode.NO_AUTH, "您无权修改该课程的信息");
+        if (!(currentUser.getUserRole() == UserConstant.ADMIN_ROLE ||(currentUser.getUserRole() == UserConstant.TEACHER_ROLE && courseService.isCourseTeacher(currentUser.getId(), courseAddTaRequest.getCourseId())))) throw new BusinessException(StatusCode.NO_AUTH, "您无权修改该课程的信息");
 
         Boolean b = courseService.addCourseTas(courseAddTaRequest.getTaId(), courseAddTaRequest.getCourseId());
 
@@ -185,7 +185,7 @@ public class CourseController {
         if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
 
         // 确认是否为该课程老师或管理员
-        if (!(currentUser.getUserRole() == UserConstant.ADMIN_ROLE ||(currentUser.getUserRole() == UserConstant.TEACHER_ASSISTANT_ROLE && courseService.isCourseTeacher(currentUser.getId(), courseRemoveTaRequest.getCourseId())))) throw new BusinessException(StatusCode.NO_AUTH, "您无权修改该课程的信息");
+        if (!(currentUser.getUserRole() == UserConstant.ADMIN_ROLE ||(currentUser.getUserRole() == UserConstant.TEACHER_ROLE && courseService.isCourseTeacher(currentUser.getId(), courseRemoveTaRequest.getCourseId())))) throw new BusinessException(StatusCode.NO_AUTH, "您无权修改该课程的信息");
 
         Boolean b = courseService.removeCourseTas(courseRemoveTaRequest.getTaId(), courseRemoveTaRequest.getCourseId());
 

@@ -248,10 +248,10 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
         if (!Collections.disjoint(newTaList, taIdLists)) throw new BusinessException(StatusCode.PARAMS_ERROR, "添加的TA已存在于课程中");
 
-        List<TeacherAssistantCourse> newUserCourseList = newTaList.stream().map(studentId -> {
+        List<TeacherAssistantCourse> newUserCourseList = newTaList.stream().map(taId -> {
             TeacherAssistantCourse userCourse = new TeacherAssistantCourse();
             userCourse.setCourseId(courseId);
-            userCourse.setId(studentId);
+            userCourse.setTeacherAssistantId(taId);
             return userCourse;
         }).toList();
 
@@ -270,7 +270,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         QueryWrapper<UserCourse> userCourseQueryWrapper = new QueryWrapper<>();
 
         userCourseQueryWrapper.eq("course_id", courseId);
-        userCourseQueryWrapper.and(wrapper -> wrapper.in("user_id", (Object) studentIds));
+        userCourseQueryWrapper.and(wrapper -> wrapper.in("user_id", Arrays.asList(studentIds)));
 
         boolean removed = userCourseService.remove(userCourseQueryWrapper);
 
@@ -283,10 +283,11 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     public Boolean removeCourseTas(Long[] taIds, Long courseId) {
 
         // TODO: 验证添加的TA身份以及是否存在
+
         QueryWrapper<TeacherAssistantCourse> userCourseQueryWrapper = new QueryWrapper<>();
 
         userCourseQueryWrapper.eq("course_id", courseId);
-        userCourseQueryWrapper.and(wrapper -> wrapper.in("teacher_assistant_id", (Object) taIds));
+        userCourseQueryWrapper.and(wrapper -> wrapper.in("teacher_assistant_id",  Arrays.asList(taIds)));
 
         boolean removed = teacherAssistantCourseService.remove(userCourseQueryWrapper);
 
