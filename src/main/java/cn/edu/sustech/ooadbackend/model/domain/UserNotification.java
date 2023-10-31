@@ -47,6 +47,7 @@ public class UserNotification {
     /**
      * 是否逻辑删除，默认值为正常(0)，非空<br/>0：正常，1：已被逻辑删除
      */
+    @TableLogic
     @TableField(value = "is_deleted")
     private Byte isDeleted;
 

@@ -1,10 +1,22 @@
 package cn.edu.sustech.ooadbackend.controller;
 
 import cn.edu.sustech.ooadbackend.common.BaseResponse;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import cn.edu.sustech.ooadbackend.common.StatusCode;
+import cn.edu.sustech.ooadbackend.constant.UserConstant;
+import cn.edu.sustech.ooadbackend.exception.BusinessException;
+import cn.edu.sustech.ooadbackend.model.domain.Notification;
+import cn.edu.sustech.ooadbackend.model.domain.User;
+import cn.edu.sustech.ooadbackend.model.domain.UserNotification;
+import cn.edu.sustech.ooadbackend.model.response.NotificationInfoResponse;
+import cn.edu.sustech.ooadbackend.service.NotificationService;
+import cn.edu.sustech.ooadbackend.service.UserNotificationService;
+import cn.edu.sustech.ooadbackend.utils.ResponseUtils;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import jakarta.annotation.Resource;
+import jakarta.annotation.Resources;
+import jakarta.servlet.http.HttpServletRequest;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @className: NotificationController
@@ -18,13 +30,37 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/notification")
 public class NotificationController {
 
-//    @GetMapping("")
-//    public
+    @Resource
+    UserNotificationService userNotificationService;
+
+    @Resource
+    NotificationService notificationService;
+
+    @GetMapping("")
+    public BaseResponse<NotificationInfoResponse> getNotificationInfo(HttpServletRequest request, @RequestParam Long notificationId){
+
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+
+        return ResponseUtils.success(notificationService.getNotificationInfo(request, notificationId));
+    }
 
     @PostMapping("/insert")
     public BaseResponse<Long> insertNotification(){
 
         return null;
+    }
+
+    @GetMapping("/list")
+    public BaseResponse<Notification[]> getNotification(@NotNull HttpServletRequest request){
+
+        // 获取用户登录态
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+
+        return ResponseUtils.success(notificationService.listNotification(request));
     }
 
 }
