@@ -5,6 +5,7 @@ import cn.edu.sustech.ooadbackend.constant.UserConstant;
 import cn.edu.sustech.ooadbackend.exception.BusinessException;
 import cn.edu.sustech.ooadbackend.mapper.NotificationMapper;
 import cn.edu.sustech.ooadbackend.model.domain.*;
+import cn.edu.sustech.ooadbackend.model.request.NotificationInsertRequest;
 import cn.edu.sustech.ooadbackend.model.response.NotificationInfoResponse;
 import cn.edu.sustech.ooadbackend.service.*;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -12,8 +13,11 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * @className NotificationServiceImpl
@@ -24,9 +28,13 @@ import java.util.List;
     
 @Service
 public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Notification> implements NotificationService{
-
     @Resource
     UserNotificationService userNotificationService;
+
+    @Resource
+    UserCourseService userCourseService;
+    @Resource
+    TeacherAssistantCourseService teacherAssistantCourseService;
     @Resource
     ProjectService projectService;
     @Resource
@@ -136,8 +144,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     }
 
 
-
-    private Notification getSimplifiedNotification(Notification notification){
+    public Notification getSimplifiedNotification(Notification notification){
         Notification simplifiedNotification = new Notification();
 
         simplifiedNotification.setId(notification.getId());
@@ -145,4 +152,5 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
         return simplifiedNotification;
     }
+
 }

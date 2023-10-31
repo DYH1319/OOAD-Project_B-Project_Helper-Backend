@@ -54,7 +54,7 @@ public class TeacherAssistantCourseServiceImpl extends ServiceImpl<TeacherAssist
         // 从数据库teacher_assistant_course中查询是否存在userId和courseId符合的数据段
         QueryWrapper<TeacherAssistantCourse> courseQueryWrapper = new QueryWrapper<>();
         courseQueryWrapper.eq("course_id", courseId);
-        courseQueryWrapper.eq("teacher_assistant_id", userId);
+        courseQueryWrapper.and(wrapper -> wrapper.eq("teacher_assistant_id", userId));
 
         TeacherAssistantCourse targetTeacherAssistantCourse = this.getOne(courseQueryWrapper);
 

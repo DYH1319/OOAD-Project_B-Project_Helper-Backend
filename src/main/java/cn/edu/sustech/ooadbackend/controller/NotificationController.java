@@ -7,6 +7,8 @@ import cn.edu.sustech.ooadbackend.exception.BusinessException;
 import cn.edu.sustech.ooadbackend.model.domain.Notification;
 import cn.edu.sustech.ooadbackend.model.domain.User;
 import cn.edu.sustech.ooadbackend.model.domain.UserNotification;
+import cn.edu.sustech.ooadbackend.model.request.NotificationDeleteRequest;
+import cn.edu.sustech.ooadbackend.model.request.NotificationInsertRequest;
 import cn.edu.sustech.ooadbackend.model.response.NotificationInfoResponse;
 import cn.edu.sustech.ooadbackend.service.NotificationService;
 import cn.edu.sustech.ooadbackend.service.UserNotificationService;
@@ -37,7 +39,7 @@ public class NotificationController {
     NotificationService notificationService;
 
     @GetMapping("")
-    public BaseResponse<NotificationInfoResponse> getNotificationInfo(HttpServletRequest request, @RequestParam Long notificationId){
+    public BaseResponse<NotificationInfoResponse> getNotificationInfo(HttpServletRequest request, @RequestParam Long notificationId) {
 
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
 
@@ -45,13 +47,6 @@ public class NotificationController {
 
         return ResponseUtils.success(notificationService.getNotificationInfo(request, notificationId));
     }
-
-    @PostMapping("/insert")
-    public BaseResponse<Long> insertNotification(){
-
-        return null;
-    }
-
     @GetMapping("/list")
     public BaseResponse<Notification[]> getNotification(@NotNull HttpServletRequest request){
 
@@ -61,6 +56,7 @@ public class NotificationController {
         if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
 
         return ResponseUtils.success(notificationService.listNotification(request));
+
     }
 
 }

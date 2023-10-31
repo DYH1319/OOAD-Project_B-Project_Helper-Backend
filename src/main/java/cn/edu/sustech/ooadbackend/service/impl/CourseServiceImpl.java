@@ -4,31 +4,20 @@ import cn.edu.sustech.ooadbackend.common.StatusCode;
 import cn.edu.sustech.ooadbackend.constant.UserConstant;
 import cn.edu.sustech.ooadbackend.exception.BusinessException;
 import cn.edu.sustech.ooadbackend.mapper.CourseMapper;
-import cn.edu.sustech.ooadbackend.model.domain.Course;
-import cn.edu.sustech.ooadbackend.model.domain.TeacherAssistantCourse;
-import cn.edu.sustech.ooadbackend.model.domain.User;
-import cn.edu.sustech.ooadbackend.model.domain.UserCourse;
+import cn.edu.sustech.ooadbackend.model.domain.*;
 import cn.edu.sustech.ooadbackend.model.request.CourseInsertRequest;
 import cn.edu.sustech.ooadbackend.model.request.CourseUpdateRequest;
+import cn.edu.sustech.ooadbackend.model.request.NotificationInsertRequest;
 import cn.edu.sustech.ooadbackend.model.response.CourseInfoResponse;
-import cn.edu.sustech.ooadbackend.service.CourseService;
-import cn.edu.sustech.ooadbackend.service.TeacherAssistantCourseService;
-import cn.edu.sustech.ooadbackend.service.UserCourseService;
-import cn.edu.sustech.ooadbackend.service.UserService;
-import cn.edu.sustech.ooadbackend.utils.ResponseUtils;
-import com.baomidou.mybatisplus.core.conditions.query.Query;
+import cn.edu.sustech.ooadbackend.service.*;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * @className CourseServiceImpl
@@ -51,6 +40,12 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
     @Resource
     private TeacherAssistantCourseService teacherAssistantCourseService;
+
+    @Resource
+    private NotificationService notificationService;
+
+    @Resource
+    private UserNotificationService userNotificationService;
 
     @Override
     public List<Course> listCourse(HttpServletRequest request) {
@@ -113,7 +108,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         course.setTeacherId(courseUpdateRequest.getTeacherId());
         course.setCourseName(courseUpdateRequest.getCourseName());
 
-        Boolean isUpdated = courseMapper.updateCourse(course);
+        boolean isUpdated = courseMapper.updateCourse(course);
         if (!isUpdated) throw new BusinessException(StatusCode.PARAMS_ERROR, "课程信息更新失败");
 
         // 校验助教Id列表是否合法
@@ -201,7 +196,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         // 从数据库course中查找是否存在符合userId和courseId的数据段
         QueryWrapper<Course> courseQueryWrapper = new QueryWrapper<>();
         courseQueryWrapper.eq("id", courseId);
-        courseQueryWrapper.eq("teacher_id", userId);
+        courseQueryWrapper.and(wrapper -> wrapper.eq("teacher_id", userId));
 
         Course targetCourse = this.getOne(courseQueryWrapper);
         if (targetCourse == null) {
@@ -347,6 +342,168 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         detailedCourse.setCreateTime(course.getCreateTime());
 
         return detailedCourse;
+    }
+
+    @Override
+    public Notification[] listCourseNotification(HttpServletRequest request, Long courseId) {
+
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        if (currentUser.getUserRole() == UserConstant.ADMIN_ROLE) {
+
+            QueryWrapper<Notification> notificationQueryWrapper = new QueryWrapper<>();
+            notificationQueryWrapper.eq("course_id", courseId);
+
+            List<Notification> notificationList = notificationService.list(notificationQueryWrapper);
+            if (notificationList.isEmpty()) throw new BusinessException(StatusCode.PARAMS_ERROR, "未找到与该用户有关的通知");
+
+            return notificationList.stream().map(notificationService :: getSimplifiedNotification).toArray(Notification[] :: new);
+
+        } else if (currentUser.getUserRole() == UserConstant.TEACHER_ROLE || currentUser.getUserRole() == UserConstant.TEACHER_ASSISTANT_ROLE) {
+
+            // 获取当前用户作为接收方的所有通知
+            QueryWrapper<UserNotification> notificationQueryWrapper = new QueryWrapper<>();
+            notificationQueryWrapper.eq("receiver_id", currentUser.getId());
+            List<UserNotification> notifications = userNotificationService.list(notificationQueryWrapper);
+            List<Long> notificationsIdList = notifications.stream().map(UserNotification::getNotificationId).toList();
+
+            // 获取当前用户作为发送方的所有通知
+            QueryWrapper<Notification> notifyWrapper = new QueryWrapper<>();
+            notifyWrapper.eq("sender_id", currentUser.getId());
+
+            if (!notificationsIdList.isEmpty()){
+                notifyWrapper.or(wrapper -> wrapper.in("id", notificationsIdList));
+            }
+
+            notifyWrapper.and(wrapper -> wrapper.eq("course_id", courseId));
+
+            List<Notification> notificationList = notificationService.list(notifyWrapper);
+
+            if (notificationList.isEmpty()) throw new BusinessException(StatusCode.PARAMS_ERROR, "未找到与用户相关的通知");
+
+            return notificationList.stream().map( notificationService :: getSimplifiedNotification).toArray(Notification[] :: new);
+
+        } else if (currentUser.getUserRole() == UserConstant.STUDENT_ROLE){
+
+            // 获取当前用户作为接收方的所有通知
+            QueryWrapper<UserNotification> notificationQueryWrapper = new QueryWrapper<>();
+            notificationQueryWrapper.eq("receiver_id", currentUser.getId());
+            List<UserNotification> notifications = userNotificationService.list(notificationQueryWrapper);
+            List<Long> notificationsIdList = notifications.stream().map(UserNotification::getNotificationId).toList();
+
+            if (notificationsIdList.isEmpty()) throw new BusinessException(StatusCode.PARAMS_ERROR, "未找到有关当前用户的任何信息");
+
+            QueryWrapper<Notification> notifyWrapper = new QueryWrapper<>();
+            notifyWrapper.in("id", notificationsIdList);
+            notifyWrapper.and(wrapper -> wrapper.eq("course_id", courseId));
+
+            List<Notification> notificationList = notificationService.list(notifyWrapper);
+
+            if (notificationList.isEmpty()) throw new BusinessException(StatusCode.PARAMS_ERROR, "未找到有关当前用户的任何信息");
+
+            return notificationList.stream().map(notificationService :: getSimplifiedNotification).toArray(Notification[] :: new);
+
+        } else {
+            throw new BusinessException(StatusCode.PARAMS_ERROR, "用户权限不可见");
+        }
+    }
+
+    @Override
+    public Boolean removeNotification(Long notificationId) {
+
+
+
+        QueryWrapper<Notification> notificationQueryWrapper = new QueryWrapper<>();
+
+        notificationQueryWrapper.eq("id", notificationId);
+
+        boolean removed = notificationService.remove(notificationQueryWrapper);
+
+        if (!removed) throw new BusinessException(StatusCode.SYSTEM_ERROR, "无法删除该通知");
+
+        QueryWrapper<UserNotification> userNotificationQueryWrapper = new QueryWrapper<>();
+
+        userNotificationQueryWrapper.eq("notification_id", notificationId);
+
+        boolean removedUser = userNotificationService.remove(userNotificationQueryWrapper);
+
+        if (!removedUser) throw new BusinessException(StatusCode.SYSTEM_ERROR, "无法删除该通知相关的用户内容");
+
+        return true;
+    }
+
+    @Override
+    @Transactional
+    public Long insertNotification(Long senderId, NotificationInsertRequest notificationRequest) {
+
+        // TODO: 增强对学生是否存在的检验
+
+
+        Notification newNotification = new Notification();
+
+        newNotification.setTitle(notificationRequest.getTitle());
+        newNotification.setMessage(notificationRequest.getMessage());
+        newNotification.setSenderId(senderId);
+        newNotification.setCourseId(notificationRequest.getCourseId());
+
+        boolean saved = notificationService.save(newNotification);
+
+
+
+        if (!saved) throw new BusinessException(StatusCode.SYSTEM_ERROR, "新建通知时发生错误");
+
+        if (notificationRequest.getReceivers().length != 0) {
+
+            List<UserNotification> userNotifications = Arrays.stream(notificationRequest.getReceivers()).map(receiverId -> {
+                UserNotification userNotification = new UserNotification();
+                userNotification.setIsRead((byte) 0);
+                userNotification.setReceiverId(receiverId);
+                userNotification.setNotificationId(newNotification.getId());
+                return userNotification;
+            }).toList();
+
+            boolean b = userNotificationService.saveBatch(userNotifications);
+
+            if (!b) throw new BusinessException(StatusCode.PARAMS_ERROR, "添加接收方失败");
+
+        } else {
+
+            // 获取该课程所有学生ID
+            QueryWrapper<UserCourse> userCourseQueryWrapper = new QueryWrapper<>();
+
+            userCourseQueryWrapper.eq("course_id", notificationRequest.getCourseId());
+
+            List<UserCourse> studentList = userCourseService.list(userCourseQueryWrapper);
+
+            List<Long> studentIdList = new java.util.ArrayList<>(studentList.stream().map(UserCourse::getUserId).toList());
+
+
+            // 获取该课程所有TA的ID
+            QueryWrapper<TeacherAssistantCourse> teacherAssistantCourseQueryWrapper = new QueryWrapper<>();
+
+            teacherAssistantCourseQueryWrapper.eq("course_id", notificationRequest.getCourseId());
+
+            List<TeacherAssistantCourse> taList = teacherAssistantCourseService.list(teacherAssistantCourseQueryWrapper);
+
+            List<Long> studentIdList2 = taList.stream().map(TeacherAssistantCourse::getTeacherAssistantId).toList();
+
+            studentIdList.addAll(studentIdList2);
+
+            List<UserNotification> userNotifications = studentIdList.stream().map(receiverId -> {
+                UserNotification userNotification = new UserNotification();
+                userNotification.setIsRead((byte) 0);
+                userNotification.setReceiverId(receiverId);
+                userNotification.setNotificationId(newNotification.getId());
+                return userNotification;
+            }).toList();
+
+            boolean b = userNotificationService.saveBatch(userNotifications);
+
+            if (!b) throw new BusinessException(StatusCode.PARAMS_ERROR, "添加接收方失败");
+
+        }
+
+        return newNotification.getId();
     }
 
     private Course getSafetyCourse(Course course){

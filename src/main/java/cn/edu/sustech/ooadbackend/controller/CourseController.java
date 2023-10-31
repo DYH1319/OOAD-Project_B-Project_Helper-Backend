@@ -5,20 +5,21 @@ import cn.edu.sustech.ooadbackend.common.StatusCode;
 import cn.edu.sustech.ooadbackend.constant.UserConstant;
 import cn.edu.sustech.ooadbackend.exception.BusinessException;
 import cn.edu.sustech.ooadbackend.model.domain.Course;
+import cn.edu.sustech.ooadbackend.model.domain.Notification;
 import cn.edu.sustech.ooadbackend.model.domain.User;
-import cn.edu.sustech.ooadbackend.model.request.CourseDeleteRequest;
-import cn.edu.sustech.ooadbackend.model.request.CourseInsertRequest;
-import cn.edu.sustech.ooadbackend.model.request.CourseModifyMembersRequest;
-import cn.edu.sustech.ooadbackend.model.request.CourseUpdateRequest;
+import cn.edu.sustech.ooadbackend.model.request.*;
 import cn.edu.sustech.ooadbackend.model.response.CourseInfoResponse;
 import cn.edu.sustech.ooadbackend.service.CourseService;
+import cn.edu.sustech.ooadbackend.service.NotificationService;
 import cn.edu.sustech.ooadbackend.service.TeacherAssistantCourseService;
 import cn.edu.sustech.ooadbackend.service.UserCourseService;
 import cn.edu.sustech.ooadbackend.utils.ResponseUtils;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
+import javax.management.Query;
 import java.util.List;
 
 
@@ -35,6 +36,10 @@ import java.util.List;
 public class CourseController {
     @Resource
     private CourseService courseService;
+
+
+    @Resource
+    private NotificationService notificationService;
 
     @Resource
     private TeacherAssistantCourseService teacherAssistantCourseService;
@@ -230,4 +235,53 @@ public class CourseController {
         return ResponseUtils.success(courseService.getCourseInfo(courseId));
 
     }
+
+    @PostMapping("/notification/delete")
+    public BaseResponse<Boolean> deleteNotification(HttpServletRequest request, @RequestBody NotificationDeleteRequest notificationDeleteRequest){
+
+        // 检查用户态以及用户权限
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+
+        QueryWrapper<Notification> notificationQueryWrapper = new QueryWrapper<>();
+
+        notificationQueryWrapper.eq("id", notificationDeleteRequest.getNotificationId());
+
+        Notification notification = notificationService.getOne(notificationQueryWrapper);
+
+        if (notification == null) throw new BusinessException(StatusCode.SYSTEM_ERROR, "删除通知的时候发生异常");
+
+        if (!(currentUser.getUserRole() == UserConstant.ADMIN_ROLE || (currentUser.getUserRole() == UserConstant.TEACHER_ROLE && courseService.isCourseTeacher(currentUser.getId(), notification.getId())) || (currentUser.getUserRole() == UserConstant.TEACHER_ASSISTANT_ROLE && teacherAssistantCourseService.isCourseTa(currentUser.getId(), notification.getCourseId())))) throw new BusinessException(StatusCode.NO_AUTH, "您无权向该课程删除通知");
+
+        return ResponseUtils.success(courseService.removeNotification(notificationDeleteRequest.getNotificationId()));
+    }
+
+    @PostMapping("/notification/insert")
+    public BaseResponse<Long> insertNotification(HttpServletRequest request, @RequestBody NotificationInsertRequest notificationInsertRequest){
+
+        // 检查用户态以及用户权限
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+
+        if (!(currentUser.getUserRole() == UserConstant.ADMIN_ROLE || (currentUser.getUserRole() == UserConstant.TEACHER_ROLE && courseService.isCourseTeacher(currentUser.getId(), notificationInsertRequest.getCourseId())) || (currentUser.getUserRole() == UserConstant.TEACHER_ASSISTANT_ROLE && teacherAssistantCourseService.isCourseTa(currentUser.getId(), notificationInsertRequest.getCourseId())))) throw new BusinessException(StatusCode.NO_AUTH, "您无权向该课程添加通知");
+
+        return ResponseUtils.success(courseService.insertNotification(currentUser.getId(), notificationInsertRequest));
+    }
+
+    /**
+     *
+     * @param request
+     * @param courseId
+     * @return
+     */
+    @GetMapping("/notification/list")
+    public BaseResponse<Notification[]> listCourseNotification (HttpServletRequest request, @RequestParam Long courseId){
+
+        if (request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE) == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+
+        return ResponseUtils.success(courseService.listCourseNotification(request, courseId));
+    }
+
 }

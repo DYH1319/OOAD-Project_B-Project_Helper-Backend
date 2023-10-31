@@ -1,9 +1,11 @@
 package cn.edu.sustech.ooadbackend.service;
 
 import cn.edu.sustech.ooadbackend.model.domain.Notification;
+import cn.edu.sustech.ooadbackend.model.request.NotificationInsertRequest;
 import cn.edu.sustech.ooadbackend.model.response.NotificationInfoResponse;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties;
 
 /**
  * @className NotificationService
@@ -23,6 +25,9 @@ public interface NotificationService extends IService<Notification>{
     public NotificationInfoResponse getNotificationInfo(HttpServletRequest request, Long notificationId);
 
     public Notification[] listNotification(HttpServletRequest request);
+
+    public Notification getSimplifiedNotification(Notification notification);
+
 
 
 }

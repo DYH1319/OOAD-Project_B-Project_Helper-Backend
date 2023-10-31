@@ -1,9 +1,11 @@
 package cn.edu.sustech.ooadbackend.service;
 
 import cn.edu.sustech.ooadbackend.model.domain.Course;
+import cn.edu.sustech.ooadbackend.model.domain.Notification;
 import cn.edu.sustech.ooadbackend.model.domain.User;
 import cn.edu.sustech.ooadbackend.model.request.CourseInsertRequest;
 import cn.edu.sustech.ooadbackend.model.request.CourseUpdateRequest;
+import cn.edu.sustech.ooadbackend.model.request.NotificationInsertRequest;
 import cn.edu.sustech.ooadbackend.model.response.CourseInfoResponse;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -89,5 +91,11 @@ public interface CourseService extends IService<Course>{
     public Boolean removeCourseTas(Long[] taIds, Long courseId);
 
     public CourseInfoResponse getCourseInfo(Long courseId);
+
+    public Notification[] listCourseNotification(HttpServletRequest request, Long courseId);
+
+    public Boolean removeNotification(Long notificationId);
+
+    public Long insertNotification(Long senderId, NotificationInsertRequest notificationRequest);
 
 }
