@@ -10,11 +10,13 @@ import cn.edu.sustech.ooadbackend.model.domain.User;
 import cn.edu.sustech.ooadbackend.model.domain.UserCourse;
 import cn.edu.sustech.ooadbackend.model.request.CourseInsertRequest;
 import cn.edu.sustech.ooadbackend.model.request.CourseUpdateRequest;
+import cn.edu.sustech.ooadbackend.model.response.CourseInfoResponse;
 import cn.edu.sustech.ooadbackend.service.CourseService;
 import cn.edu.sustech.ooadbackend.service.TeacherAssistantCourseService;
 import cn.edu.sustech.ooadbackend.service.UserCourseService;
 import cn.edu.sustech.ooadbackend.service.UserService;
 import cn.edu.sustech.ooadbackend.utils.ResponseUtils;
+import com.baomidou.mybatisplus.core.conditions.query.Query;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
@@ -293,6 +295,58 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
         if (!removed) throw new BusinessException(StatusCode.SYSTEM_ERROR, "删除TA时发生系统错误");
         return removed;
+    }
+
+    @Override
+    public CourseInfoResponse getCourseInfo(Long courseId) {
+
+        QueryWrapper<Course> courseQueryWrapper = new QueryWrapper<>();
+        courseQueryWrapper.eq("id", courseId);
+
+        Course course = this.getOne(courseQueryWrapper);
+
+        if (course == null) throw new BusinessException(StatusCode.PARAMS_ERROR, "课程不存在或者已被删除");
+
+        return getDetailedCourse(course);
+    }
+
+    private CourseInfoResponse getDetailedCourse(Course course){
+
+        CourseInfoResponse detailedCourse = new CourseInfoResponse();
+
+        // 获取课程老师姓名
+        QueryWrapper<User> teacherQuery = new QueryWrapper<>();
+        teacherQuery.eq("id", course.getTeacherId());
+
+        User courseTeacher = userService.getOne(teacherQuery);
+
+        if (courseTeacher == null) throw new BusinessException(StatusCode.SYSTEM_ERROR, "查询课程教师时发生系统错误");
+
+        // 获取课程Ta姓名列表
+        QueryWrapper<TeacherAssistantCourse> taQuery = new QueryWrapper<>();
+        taQuery.eq("course_id", course.getId());
+
+        List<TeacherAssistantCourse> taList = teacherAssistantCourseService.list(taQuery);
+        List<Long> taIdList = taList.stream().map(TeacherAssistantCourse::getTeacherAssistantId).toList();
+
+        QueryWrapper<User> taUserQuery = new QueryWrapper<>();
+        taUserQuery.in("id", taIdList);
+        List<User> tas = userService.list(taUserQuery);
+        List<String> taNameList = tas.stream().map(User::getUsername).toList();
+
+        // 获取学生人数
+        QueryWrapper<UserCourse> studentQuery = new QueryWrapper<>();
+        studentQuery.eq("course_id", course.getId());
+
+        long studentNum = userCourseService.count(studentQuery);
+
+        detailedCourse.setCourseName(course.getCourseName());
+        detailedCourse.setTeacherName(courseTeacher.getUsername());
+        detailedCourse.setTaNameList(taNameList.toArray(String[]::new));
+        detailedCourse.setStudentNum(studentNum);
+        detailedCourse.setCreateTime(course.getCreateTime());
+
+        return detailedCourse;
     }
 
     private Course getSafetyCourse(Course course){

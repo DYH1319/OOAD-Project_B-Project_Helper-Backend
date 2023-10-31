@@ -10,6 +10,7 @@ import cn.edu.sustech.ooadbackend.model.request.CourseDeleteRequest;
 import cn.edu.sustech.ooadbackend.model.request.CourseInsertRequest;
 import cn.edu.sustech.ooadbackend.model.request.CourseModifyMembersRequest;
 import cn.edu.sustech.ooadbackend.model.request.CourseUpdateRequest;
+import cn.edu.sustech.ooadbackend.model.response.CourseInfoResponse;
 import cn.edu.sustech.ooadbackend.service.CourseService;
 import cn.edu.sustech.ooadbackend.service.TeacherAssistantCourseService;
 import cn.edu.sustech.ooadbackend.service.UserCourseService;
@@ -27,7 +28,7 @@ import java.util.List;
  * @Description:
  * @Author: Daniel
  * @Date: 2023/10/18 12:21
- * @Version:1.0
+ * @Version: 1.0
  */
 @RestController
 @RequestMapping("/course")
@@ -215,4 +216,18 @@ public class CourseController {
         return ResponseUtils.success(b);
     }
 
+    @GetMapping("")
+    public BaseResponse<CourseInfoResponse> getCourseInfo(HttpServletRequest request, @RequestParam Long courseId){
+
+        // 获取当前用户登录态
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN, "未登录");
+
+        // 检查课程查询参数
+        if (courseId <= 0L) throw new BusinessException(StatusCode.PARAMS_ERROR, "课程查询参数错误");
+
+        return ResponseUtils.success(courseService.getCourseInfo(courseId));
+
+    }
 }
