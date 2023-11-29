@@ -28,7 +28,7 @@ public class UserController {
     private UserService userService;
     
     @PostMapping("/register")
-    public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest, HttpServletRequest request) {
+    public BaseResponse<Long> userRegister(@RequestBody(required = false) UserRegisterRequest userRegisterRequest, HttpServletRequest request) {
         if (userRegisterRequest == null) {
             throw new BusinessException(StatusCode.PARAMS_ERROR);
         }
@@ -44,7 +44,7 @@ public class UserController {
     }
     
     @PostMapping("/login")
-    public BaseResponse<User> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+    public BaseResponse<User> userLogin(@RequestBody(required = false) UserLoginRequest userLoginRequest, HttpServletRequest request) {
         if (userLoginRequest == null) {
             throw new BusinessException(StatusCode.PARAMS_ERROR);
         }
@@ -79,7 +79,7 @@ public class UserController {
     }
 
     @PostMapping("/current/update")
-    public BaseResponse<Boolean> currentUserUpdate(@RequestBody CurrentUserUpdateRequest currentUserRequest, HttpServletRequest request){
+    public BaseResponse<Boolean> currentUserUpdate(@RequestBody(required = false) CurrentUserUpdateRequest currentUserRequest, HttpServletRequest request){
         if (currentUserRequest == null) throw new BusinessException(StatusCode.PARAMS_ERROR);
         Boolean isUpdated = userService.currentUserUpdate(request, currentUserRequest);
 

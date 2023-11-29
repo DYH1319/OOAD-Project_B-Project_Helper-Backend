@@ -85,6 +85,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     
     @Override
     public int userLogout(HttpServletRequest request) {
+        if (request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE) == null) {
+            throw new BusinessException(StatusCode.PARAMS_ERROR, "您尚未登录，无法注销");
+        }
         // 移除登录态
         request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
         return 0;
@@ -100,7 +103,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = this.getById(userId);
         User safetyUser = this.getSafetyUser(user);
         request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, safetyUser);
-        return this.getSafetyUser(safetyUser);
+        return safetyUser;
     }
     
     private User getSafetyUser(User originUser) {
