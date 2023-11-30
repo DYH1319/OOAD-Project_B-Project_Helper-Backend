@@ -12,5 +12,5 @@ import lombok.Data;
  */
 @Data
 public class CourseDeleteRequest {
-    private Long courseId;
+    private Long id;
 }
