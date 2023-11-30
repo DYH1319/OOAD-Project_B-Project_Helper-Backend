@@ -14,6 +14,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -109,7 +111,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         course.setCourseName(courseUpdateRequest.getCourseName());
 
         boolean isUpdated = courseMapper.updateCourse(course);
-        if (!isUpdated) throw new BusinessException(StatusCode.PARAMS_ERROR, "课程信息更新失败");
+//        if (!isUpdated) throw new BusinessException(StatusCode.PARAMS_ERROR, "课程信息更新失败");
 
         // 校验助教Id列表是否合法
         QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
@@ -119,7 +121,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         List<Long> newtTaIdList = Arrays.asList(courseUpdateRequest.getTaIdList());
         if (!new HashSet<>(toIdList).containsAll(newtTaIdList)) throw new BusinessException(StatusCode.PARAMS_ERROR, "助教列表中含有非法用户");
 
-        teacherAssistantCourseService.removeByCourseId(courseUpdateRequest.getId());
+        Boolean b = teacherAssistantCourseService.removeByCourseId(courseUpdateRequest.getId());
 
         List<TeacherAssistantCourse> newTeacherAssistantCourses = newtTaIdList.stream().map(aLong -> {
             TeacherAssistantCourse teacherAssistantCourse = new TeacherAssistantCourse();
@@ -129,7 +131,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         }).toList();
 
         Boolean saveBatch = teacherAssistantCourseService.saveBatch(newTeacherAssistantCourses);
-        if (saveBatch != true) throw new BusinessException(StatusCode.PARAMS_ERROR, "课程信息更新失败");
+        if (saveBatch != true && courseUpdateRequest.getTaIdList().length > 0) throw new BusinessException(StatusCode.PARAMS_ERROR, "课程信息更新失败");
 
         return saveBatch;
     }
@@ -185,7 +187,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         }).toList();
 
         Boolean saveBatch = teacherAssistantCourseService.saveBatch(newTeacherAssistantCourses);
-        if (!saveBatch) throw new BusinessException(StatusCode.PARAMS_ERROR, "课程信息插入失败");
+        if (!saveBatch && courseInsertRequest.getTaIdList().length > 0) throw new BusinessException(StatusCode.PARAMS_ERROR, "课程信息插入失败");
 
         return course.getId();
     }
