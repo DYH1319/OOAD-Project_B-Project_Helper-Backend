@@ -33,6 +33,22 @@ public interface UserService extends IService<User> {
     User userLogin(String userAccount, String userPassword, HttpServletRequest request);
     
     /**
+     * 为使用邮箱登录的用户发送验证码
+     * @param mailAddress 用户的邮箱地址
+     * @param request HttpServletRequest
+     * @return 一个随机生成的验证码
+     */
+    boolean userLoginMailSend(String mailAddress, HttpServletRequest request);
+    
+    /**
+     * 用户邮箱验证码登录
+     * @param mailAddress 邮箱地址
+     * @param verificationCode 验证码
+     * @return 脱敏后的用户信息
+     */
+    User userLoginMailCheck(String mailAddress, String verificationCode, HttpServletRequest request);
+    
+    /**
      * 用户注销
      * @param request HttpServletRequest
      */

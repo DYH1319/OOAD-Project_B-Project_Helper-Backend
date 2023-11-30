@@ -7,15 +7,20 @@ import cn.edu.sustech.ooadbackend.mapper.UserMapper;
 import cn.edu.sustech.ooadbackend.model.domain.User;
 import cn.edu.sustech.ooadbackend.model.request.CurrentUserUpdateRequest;
 import cn.edu.sustech.ooadbackend.service.UserService;
+import cn.edu.sustech.ooadbackend.utils.RedisClient;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.regex.Pattern;
 
 /**
  * @className UserServiceImpl
@@ -29,6 +34,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     
     @Autowired
     private UserMapper userMapper;
+    
+    @Autowired
+    private JavaMailSender javaMailSender;
+    
+    @Autowired
+    private RedisClient redisClient;
     
     @Override
     public long userRegister(String userAccount, String username, String userPassword, String checkPassword) {
@@ -84,6 +95,67 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
     
     @Override
+    public boolean userLoginMailSend(String mailAddress, HttpServletRequest request) {
+        
+        // 校验邮箱地址的有效性
+        if (!Pattern.compile("^[A-Za-z0-9+_.-]+@([A-Za-z0-9-]+\\.)+[A-Za-z]{2,6}$").matcher(mailAddress).matches()) {
+            throw new BusinessException(StatusCode.PARAMS_ERROR, "邮箱地址不合法");
+        }
+        if (userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getEmail, mailAddress)) == null) {
+            throw new BusinessException(StatusCode.PARAMS_ERROR, "邮箱地址不存在");
+        }
+        
+        String code = generateVerificationCode();
+        String mailAddressPrefix = mailAddress.split("@")[0] + "@@@";
+        
+        if (redisClient.get(mailAddressPrefix) != null) {
+            throw new BusinessException(StatusCode.PARAMS_ERROR, "请勿频繁请求验证码");
+        }
+        
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("dyh1319@qq.com");
+        message.setTo(mailAddress);
+        message.setSubject("Project Helper 验证码");
+        message.setText("【验证码】您的登录验证码为：" + code + "。打死也不要告诉别人！（5分钟内有效）");
+        javaMailSender.send(message);
+        
+        // 设置验证码，有效期5分钟
+        redisClient.set(mailAddress, code, 300);
+        // 设置重发间隔，1分钟后可重发
+        redisClient.set(mailAddressPrefix, "NoResend", 60);
+        
+        return true;
+    }
+    
+    @Override
+    public User userLoginMailCheck(String mailAddress, String verificationCode, HttpServletRequest request) {
+        // 1. 校验
+        // 校验非null非空
+        if (StringUtils.isAnyBlank(mailAddress, verificationCode)) throw new BusinessException(StatusCode.PARAMS_ERROR, "参数为空");
+        // 校验邮箱地址的有效性
+        if (!Pattern.compile("^[A-Za-z0-9+_.-]+@([A-Za-z0-9-]+\\.)+[A-Za-z]{2,6}$").matcher(mailAddress).matches()) {
+            throw new BusinessException(StatusCode.PARAMS_ERROR, "邮箱地址不合法");
+        }
+        User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getEmail, mailAddress));
+        if (user == null) {
+            throw new BusinessException(StatusCode.PARAMS_ERROR, "邮箱地址不存在");
+        }
+        // 查询邮箱验证码是否匹配
+        if (!verificationCode.equals(redisClient.get(mailAddress))) {
+            throw new BusinessException(StatusCode.PARAMS_ERROR, "验证码不正确");
+        }
+        // 2. 清除验证码缓存
+        if (!redisClient.delete(mailAddress)) {
+            throw new BusinessException(StatusCode.SYSTEM_ERROR);
+        }
+        // 3. 用户脱敏
+        User safetyUser = getSafetyUser(user);
+        // 4. 记录用户的登录态
+        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, safetyUser);
+        return safetyUser;
+    }
+    
+    @Override
     public int userLogout(HttpServletRequest request) {
         if (request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE) == null) {
             throw new BusinessException(StatusCode.PARAMS_ERROR, "您尚未登录，无法注销");
@@ -122,6 +194,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         safetyUser.setIntendedTeammates(originUser.getIntendedTeammates());
         safetyUser.setCreateTime(originUser.getCreateTime());
         return safetyUser;
+    }
+    
+    private String generateVerificationCode() {
+        int min = 0;
+        int max = 999999;
+        
+        int randomNum = ThreadLocalRandom.current().nextInt(min, max + 1);
+        return String.format("%06d", randomNum);
     }
 
     @Override
