@@ -12,14 +12,12 @@ import cn.edu.sustech.ooadbackend.model.response.CourseInfoResponse;
 import cn.edu.sustech.ooadbackend.service.CourseService;
 import cn.edu.sustech.ooadbackend.service.NotificationService;
 import cn.edu.sustech.ooadbackend.service.TeacherAssistantCourseService;
-import cn.edu.sustech.ooadbackend.service.UserCourseService;
 import cn.edu.sustech.ooadbackend.utils.ResponseUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
-import javax.management.Query;
 import java.util.List;
 
 
@@ -36,7 +34,6 @@ import java.util.List;
 public class CourseController {
     @Resource
     private CourseService courseService;
-
 
     @Resource
     private NotificationService notificationService;
@@ -63,7 +60,7 @@ public class CourseController {
      * @return 是否成功更新
      */
     @PostMapping("/update")
-    public BaseResponse<Boolean> updateCourse(HttpServletRequest request, @RequestBody CourseUpdateRequest courseUpdateRequest){
+    public BaseResponse<Boolean> updateCourse(HttpServletRequest request, @RequestBody(required = false) CourseUpdateRequest courseUpdateRequest){
 
         // 校验参数
         if (courseUpdateRequest == null) throw new BusinessException(StatusCode.PARAMS_ERROR, "更新课程参数出错");
@@ -88,10 +85,10 @@ public class CourseController {
      * @return 是否成功删除
      */
     @PostMapping("/delete")
-    public BaseResponse<Boolean> deleteCourse(HttpServletRequest request, @RequestBody CourseDeleteRequest courseDeleteRequest){
+    public BaseResponse<Boolean> deleteCourse(HttpServletRequest request, @RequestBody(required = false) CourseDeleteRequest courseDeleteRequest){
 
         // 校验参数
-        if (courseDeleteRequest == null || courseDeleteRequest.getCourseId() <= 0) throw new BusinessException(StatusCode.PARAMS_ERROR, "删除课程参数出错");
+        if (courseDeleteRequest == null || courseDeleteRequest.getId() <= 0) throw new BusinessException(StatusCode.PARAMS_ERROR, "删除课程参数出错");
 
         // 获取用户登录态
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
@@ -102,7 +99,7 @@ public class CourseController {
         // 确认用户是否有管理员权限
         if (currentUser.getUserRole() != UserConstant.ADMIN_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非管理员用户不能修改课程信息");
 
-        Boolean deleted = courseService.deleteCourse(courseDeleteRequest.getCourseId());
+        Boolean deleted = courseService.deleteCourse(courseDeleteRequest.getId());
         return ResponseUtils.success(deleted, "成功删除课程信息");
     }
 

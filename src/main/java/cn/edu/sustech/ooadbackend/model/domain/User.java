@@ -41,7 +41,7 @@ public class User {
     private String userPassword;
     
     /**
-     * 用户身份，用于决定用户权限，默认为学生(0)，非空<br/>0：学生，1：教师，2：管理员，3：教师助理
+     * 用户身份，用于决定用户权限，默认为学生(0)，非空<br/>0：学生，1：教师助理，2：教师，3：管理员
      */
     @TableField(value = "user_role")
     private Integer userRole;
