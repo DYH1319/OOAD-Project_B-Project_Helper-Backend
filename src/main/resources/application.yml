@@ -24,9 +24,10 @@ spring:
             enable: true
   data:
     redis:
-      host: localhost
+      host: dyh1319.asia
       port: 6379
       database: 0
+      password: redis
 server:
   port: 8080
   servlet:
