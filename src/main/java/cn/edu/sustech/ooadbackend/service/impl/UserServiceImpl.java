@@ -252,13 +252,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN, "用户未登录");
         List<User> userList = this.list();
         List<User> taList = new ArrayList<>();
-        if (userList == null) throw new BusinessException(StatusCode.NULL_ERROR, "教师列表为空");
+        if (userList == null) throw new BusinessException(StatusCode.NULL_ERROR, "教师助理列表为空");
         for (User user : userList) {
             if (user.getUserRole() == UserConstant.TEACHER_ASSISTANT_ROLE) {
                 taList.add(user);
             }
         }
-        if (taList.isEmpty()) throw new BusinessException(StatusCode.NULL_ERROR, "教师列表为空");
+        if (taList.isEmpty()) throw new BusinessException(StatusCode.NULL_ERROR, "教师助理列表为空");
         return taList.stream().map(this::getSafetyTa).toList();
     }
 
