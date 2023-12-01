@@ -137,7 +137,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 校验非null非空
         if (StringUtils.isAnyBlank(mailAddress, verificationCode)) throw new BusinessException(StatusCode.PARAMS_ERROR, "参数为空");
         // 校验邮箱地址的有效性
-        if (!Pattern.compile("^[A-Za-z0-9+_.-]+@([A-Za-z0-9-]+\\.)+[A-Za-z]{2,6}$").matcher(mailAddress).matches()) {
+        if (!Pattern.compile("^[A-Za-z0-9+_.-]+@([A-Za-z0-9-]+\\.)+[A-Za-z]{2,8}$").matcher(mailAddress).matches()) {
             throw new BusinessException(StatusCode.PARAMS_ERROR, "邮箱地址不合法");
         }
         User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getEmail, mailAddress));
