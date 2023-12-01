@@ -5,6 +5,9 @@ import cn.edu.sustech.ooadbackend.model.request.CurrentUserUpdateRequest;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.util.Date;
+import java.util.List;
+
 /**
  * @className UserService
  * @version 1.0
@@ -67,4 +70,33 @@ public interface UserService extends IService<User> {
      * @return 是否修改成功
      */
     Boolean currentUserUpdate(HttpServletRequest request, CurrentUserUpdateRequest currentUserRequest);
+    /**
+     * 获取教师列表
+     * @param request HttpServletRequest
+     * @return 教师列表
+     */
+    List<User> listTeacher(HttpServletRequest request);
+
+    /**
+     * 获取教师助理列表
+     * @param request HttpServletRequest
+     * @return 教师助理列表
+     */
+    List<User> listTa(HttpServletRequest request);
+
+    /**
+     * 根据参数获取用户列表
+     * @param userAccount
+     * @param userRole
+     * @param age
+     * @param gender
+     * @param email
+     * @param avatarUrl
+     * @param startTime
+     * @param endTime
+     * @return 用户列表
+     */
+    List<User> listByParam(HttpServletRequest request, String userAccount, Integer userRole, Integer age, Byte gender, String email, String avatarUrl, Date startTime, Date endTime);
+
+
 }

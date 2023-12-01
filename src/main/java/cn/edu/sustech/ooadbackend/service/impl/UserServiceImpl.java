@@ -19,6 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
 
@@ -225,5 +229,86 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Boolean update = userMapper.updateCurrentUser(newCurrentUser);
         if (!update) throw new BusinessException(StatusCode.SYSTEM_ERROR, "无法修改当前用户信息");
         return update;
+    }
+    @Override
+    public List<User> listTeacher(HttpServletRequest request) {
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN, "用户未登录");
+        List<User> userList = this.list();
+        List<User> teacherList = new ArrayList<>();
+        if (userList == null) throw new BusinessException(StatusCode.NULL_ERROR, "教师列表为空");
+        for (User user : userList) {
+            if (user.getUserRole() == UserConstant.TEACHER_ROLE) {
+                teacherList.add(user);
+            }
+        }
+        if (teacherList.isEmpty()) throw new BusinessException(StatusCode.NULL_ERROR, "教师列表为空");
+        return teacherList.stream().map(this::getSafetyTeacher).toList();
+    }
+
+    @Override
+    public List<User> listTa(HttpServletRequest request) {
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN, "用户未登录");
+        List<User> userList = this.list();
+        List<User> taList = new ArrayList<>();
+        if (userList == null) throw new BusinessException(StatusCode.NULL_ERROR, "教师列表为空");
+        for (User user : userList) {
+            if (user.getUserRole() == UserConstant.TEACHER_ASSISTANT_ROLE) {
+                taList.add(user);
+            }
+        }
+        if (taList.isEmpty()) throw new BusinessException(StatusCode.NULL_ERROR, "教师列表为空");
+        return taList.stream().map(this::getSafetyTa).toList();
+    }
+
+    @Override
+    public List<User> listByParam(HttpServletRequest request, String userAccount, Integer userRole, Integer age, Byte gender, String email, String avatarUrl, Date startTime, Date endTime) {
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN, "用户未登录");
+        List<User> userList = this.list();
+        List<User> paramList = new ArrayList<>();
+        if (userList == null) throw new BusinessException(StatusCode.NULL_ERROR, "用户列表为空");
+        for (int i = 0; i < userList.size(); i++) {
+            if((Objects.equals(userList.get(i).getUserAccount(), userAccount)|| userAccount == null) &&
+                    (Objects.equals(userList.get(i).getUserRole(), userRole)|| userRole == null) &&
+                    (Objects.equals(userList.get(i).getAge(), age)|| age == null) &&
+                    (Objects.equals(userList.get(i).getGender(), gender)|| gender == null)&&
+                    (Objects.equals(userList.get(i).getEmail(), email)|| email == null)&&
+                    (Objects.equals(userList.get(i).getAvatarUrl(), avatarUrl)|| avatarUrl == null)&&
+                    (Objects.equals(userList.get(i).getCreateTime(), startTime)|| startTime == null)&&
+                    (Objects.equals(userList.get(i).getUpdateTime(), endTime)|| endTime == null)
+            ){
+                paramList.add(userList.get(i));
+            }
+        }
+        if (paramList.isEmpty()) throw new BusinessException(StatusCode.NULL_ERROR, "未找到该用户");
+        return paramList.stream().map(this::getSafeUser).toList();
+
+    }
+
+    private User getSafetyTeacher(User user){
+        User safeTeacher = new User();
+        safeTeacher.setId(user.getId());
+        safeTeacher.setUsername(user.getUsername());
+        return safeTeacher;
+    }
+    private User getSafetyTa(User user){
+        User safeTa = new User();
+        safeTa.setId(user.getId());
+        safeTa.setUsername(user.getUsername());
+        return safeTa;
+    }
+    private User getSafeUser(User user){
+        User safeUser = new User();
+        safeUser.setId(user.getId());
+        safeUser.setUserAccount(user.getUserAccount());
+        safeUser.setUserRole(user.getUserRole());
+        safeUser.setAge(user.getAge());
+        safeUser.setGender(user.getGender());
+        safeUser.setEmail(user.getEmail());
+        safeUser.setAvatarUrl(user.getAvatarUrl());
+        safeUser.setCreateTime(user.getCreateTime());
+        return safeUser;
     }
 }
