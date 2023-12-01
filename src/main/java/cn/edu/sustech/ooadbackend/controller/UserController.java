@@ -2,6 +2,7 @@ package cn.edu.sustech.ooadbackend.controller;
 
 import cn.edu.sustech.ooadbackend.common.BaseResponse;
 import cn.edu.sustech.ooadbackend.common.StatusCode;
+import cn.edu.sustech.ooadbackend.constant.UserConstant;
 import cn.edu.sustech.ooadbackend.exception.BusinessException;
 import cn.edu.sustech.ooadbackend.model.domain.User;
 import cn.edu.sustech.ooadbackend.model.request.CurrentUserUpdateRequest;
@@ -14,6 +15,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author DYH
@@ -109,5 +113,79 @@ public class UserController {
 
         return ResponseUtils.success(isUpdated);
     }
+    /**
+     * 获取教师列表
+     * @param request HttpServletRequest
+     * @return 教师列表
+     */
+    @GetMapping("/listAllTeacherName")
+    public BaseResponse<User[]> listAllTeacherName(HttpServletRequest request){
+        if (request == null) throw new BusinessException(StatusCode.SYSTEM_ERROR);
+        // 获取用户登录态
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        // 确认用户是否登录
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+        if(currentUser.getUserRole() != UserConstant.ADMIN_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非管理员用户不能查看所有教师列表");
+
+        List<User> teacherList = userService.listTeacher(request);
+        return ResponseUtils.success(teacherList.toArray(User[] :: new));
+    }
+    /**
+     * 获取教师助理列表
+     * @param request HttpServletRequest
+     * @return 教师助理列表
+     */
+    @GetMapping("/listAllTaName")
+    public BaseResponse<User[]> listAllTaName(HttpServletRequest request){
+
+        if (request == null) throw new BusinessException(StatusCode.SYSTEM_ERROR);
+        // 获取用户登录态
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        // 确认用户是否登录
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+        if(currentUser.getUserRole() != UserConstant.TEACHER_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非教师用户不能查看所有助教列表");
+
+
+
+        List<User> taList = userService.listTa(request);
+        return ResponseUtils.success(taList.toArray(User[] :: new));
+    }
+    /**
+     * 根据参数获取用户列表
+     * @param userAccount
+     * @param userRole
+     * @param age
+     * @param gender
+     * @param email
+     * @param avatarUrl
+     * @param startTime
+     * @param endTime
+     * @return 用户列表
+     */
+
+    @GetMapping("/listByParams")
+    public BaseResponse<User[]> listByParams(
+            HttpServletRequest request,
+            @RequestParam(name = "userAccount", required = false) String userAccount,
+            @RequestParam(name = "userRole", required = false) Integer userRole,
+            @RequestParam(name = "age", required = false) Integer age,
+            @RequestParam(name = "gender", required = false) Byte gender,
+            @RequestParam(name = "email", required = false) String email,
+            @RequestParam(name = "avatarUrl", required = false) String avatarUrl,
+            @RequestParam(name = "startTime", required = false) Date startTime,
+            @RequestParam(name = "endTime", required = false) Date endTime
+    ) {
+        if (request == null) throw new BusinessException(StatusCode.SYSTEM_ERROR);
+        // 获取用户登录态
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        // 确认用户是否登录
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+        if(currentUser.getUserRole() != UserConstant.ADMIN_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非管理员用户不能查看该用户列表");
+        List<User> userList = userService.listByParam( request,  userAccount,  userRole,  age,  gender,  email,  avatarUrl,  startTime,  endTime);
+        return ResponseUtils.success(userList.toArray(User[] :: new ));
+    }
+
+
+
 
 }
