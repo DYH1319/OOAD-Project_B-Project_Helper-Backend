@@ -5,12 +5,10 @@ import cn.edu.sustech.ooadbackend.common.StatusCode;
 import cn.edu.sustech.ooadbackend.constant.UserConstant;
 import cn.edu.sustech.ooadbackend.exception.BusinessException;
 import cn.edu.sustech.ooadbackend.model.domain.User;
-import cn.edu.sustech.ooadbackend.model.request.CurrentUserUpdateRequest;
-import cn.edu.sustech.ooadbackend.model.request.UserLoginRequest;
-import cn.edu.sustech.ooadbackend.model.request.UserLoginWithMailRequest;
-import cn.edu.sustech.ooadbackend.model.request.UserRegisterRequest;
+import cn.edu.sustech.ooadbackend.model.request.*;
 import cn.edu.sustech.ooadbackend.service.UserService;
 import cn.edu.sustech.ooadbackend.utils.ResponseUtils;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +27,7 @@ import java.util.List;
 @RequestMapping("/user")
 public class UserController {
     
-    @Autowired
+    @Resource
     private UserService userService;
     
     @PostMapping("/register")
@@ -184,8 +182,105 @@ public class UserController {
         List<User> userList = userService.listByParam( request,  userAccount,  userRole,  age,  gender,  email,  avatarUrl,  startTime,  endTime);
         return ResponseUtils.success(userList.toArray(User[] :: new ));
     }
+    /**
+     * 获取学生列表
+     * @param request HttpServletRequest
+     * @return 学生列表
+     */
+    @GetMapping("/listAllStudentName")
+    public BaseResponse<User[]> listAllStudentName(HttpServletRequest request){
 
+        if (request == null) throw new BusinessException(StatusCode.SYSTEM_ERROR);
+        // 获取用户登录态
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        // 确认用户是否登录
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+        if(currentUser.getUserRole() != UserConstant.TEACHER_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非教师用户不能查看所有助教列表");
+
+
+
+        List<User> studentList = userService.listStudent(request);
+        return ResponseUtils.success(studentList.toArray(User[] :: new));
+    }
+    /**
+     * 新增用户信息
+     * @param request HttpServletRequest
+     * @param userId 新增用户信息的包装
+     * @return 新增用户ID
+     */
+    @PostMapping("/insert")
+    public BaseResponse<Long> insertUser(HttpServletRequest request, @RequestBody UserInsertRequest userId){
+
+        // 获取用户登录态
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        // 确认用户是否登录
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+
+        // 确认用户是否有管理员权限
+        if (currentUser.getUserRole() != UserConstant.ADMIN_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非管理员用户不能修改课程信息");
+
+        Long insertUser = userService.insertUser(userId);
+        return ResponseUtils.success(insertUser, "成功新增用户");
+
+    }
+    /**
+     * 删除用户信息
+     * @param request HttpServletRequest
+     * @param userDeleteRequest 待删除的用户请求
+     * @return 是否成功删除
+     */
+    @PostMapping("/delete")
+    public BaseResponse<Boolean> deleteUser(HttpServletRequest request, @RequestBody UserDeleteRequest userDeleteRequest){
+
+        // 校验参数
+        if (userDeleteRequest == null || userDeleteRequest.getId() <= 0) throw new BusinessException(StatusCode.PARAMS_ERROR, "删除课程参数出错");
+
+        // 获取用户登录态
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        // 确认用户是否登录
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+
+        // 确认用户是否有管理员权限
+        if (currentUser.getUserRole() != UserConstant.ADMIN_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非管理员用户不能修改课程信息");
+
+        Boolean deleted = userService.deleteUser(userDeleteRequest.getId());
+        return ResponseUtils.success(deleted, "成功删除用户信息");
+    }
+
+    /**
+     * 根据id更新用户信息
+     * @param request HttpServletRequest
+     * @param userUpdateRequest 更新的用户信息
+     * @return 是否成功更新
+     */
+    /*@PostMapping("/update")
+    public BaseResponse<Boolean> updateUser(HttpServletRequest request, @RequestBody UserUpdateRequest userUpdateRequest){
+
+        // 校验参数
+        if (userUpdateRequest == null) throw new BusinessException(StatusCode.PARAMS_ERROR, "更新课程参数出错");
+
+        // 获取用户登录态
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        // 确认用户是否登录
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+
+        // 确认用户是否有管理员权限
+        if (currentUser.getUserRole() != UserConstant.ADMIN_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非管理员用户不能修改课程信息");
+
+        Boolean updated = userService.updateUser(userUpdateRequest);
+        return ResponseUtils.success(updated);
+    }
+
+     */
 
 
 
 }
+
+
+
+
+
