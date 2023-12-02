@@ -6,9 +6,12 @@ import cn.edu.sustech.ooadbackend.exception.BusinessException;
 import cn.edu.sustech.ooadbackend.mapper.UserMapper;
 import cn.edu.sustech.ooadbackend.model.domain.User;
 import cn.edu.sustech.ooadbackend.model.request.CurrentUserUpdateRequest;
+import cn.edu.sustech.ooadbackend.model.request.UserInsertRequest;
+import cn.edu.sustech.ooadbackend.model.request.UserUpdateRequest;
 import cn.edu.sustech.ooadbackend.service.UserService;
 import cn.edu.sustech.ooadbackend.utils.RedisClient;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
@@ -16,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
 import java.nio.charset.StandardCharsets;
@@ -235,13 +239,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
         if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN, "用户未登录");
         List<User> userList = this.list();
-        List<User> teacherList = new ArrayList<>();
+        List<User> teacherList ;
         if (userList == null) throw new BusinessException(StatusCode.NULL_ERROR, "教师列表为空");
-        for (User user : userList) {
-            if (user.getUserRole() == UserConstant.TEACHER_ROLE) {
-                teacherList.add(user);
-            }
-        }
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_role",UserConstant.TEACHER_ROLE);
+        teacherList = this.list(queryWrapper);
+
         if (teacherList.isEmpty()) throw new BusinessException(StatusCode.NULL_ERROR, "教师列表为空");
         return teacherList.stream().map(this::getSafetyTeacher).toList();
     }
@@ -253,11 +256,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         List<User> userList = this.list();
         List<User> taList = new ArrayList<>();
         if (userList == null) throw new BusinessException(StatusCode.NULL_ERROR, "教师助理列表为空");
-        for (User user : userList) {
-            if (user.getUserRole() == UserConstant.TEACHER_ASSISTANT_ROLE) {
-                taList.add(user);
-            }
-        }
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_role",UserConstant.TEACHER_ASSISTANT_ROLE);
+        taList = this.list(queryWrapper);
         if (taList.isEmpty()) throw new BusinessException(StatusCode.NULL_ERROR, "教师助理列表为空");
         return taList.stream().map(this::getSafetyTa).toList();
     }
@@ -267,24 +268,86 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
         if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN, "用户未登录");
         List<User> userList = this.list();
-        List<User> paramList = new ArrayList<>();
+        List<User> paramList ;
         if (userList == null) throw new BusinessException(StatusCode.NULL_ERROR, "用户列表为空");
-        for (int i = 0; i < userList.size(); i++) {
-            if((Objects.equals(userList.get(i).getUserAccount(), userAccount)|| userAccount == null) &&
-                    (Objects.equals(userList.get(i).getUserRole(), userRole)|| userRole == null) &&
-                    (Objects.equals(userList.get(i).getAge(), age)|| age == null) &&
-                    (Objects.equals(userList.get(i).getGender(), gender)|| gender == null)&&
-                    (Objects.equals(userList.get(i).getEmail(), email)|| email == null)&&
-                    (Objects.equals(userList.get(i).getAvatarUrl(), avatarUrl)|| avatarUrl == null)&&
-                    (Objects.equals(userList.get(i).getCreateTime(), startTime)|| startTime == null)&&
-                    (Objects.equals(userList.get(i).getUpdateTime(), endTime)|| endTime == null)
-            ){
-                paramList.add(userList.get(i));
-            }
-        }
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_account",userAccount)
+                .eq("user_role",userRole)
+                .eq("age",age)
+                .eq("gender",gender)
+                .eq("email",email)
+                .eq("avatar_url",avatarUrl)
+                .eq("create_time",startTime)
+                .eq("update_time",endTime);
+        paramList = this.list(queryWrapper);
         if (paramList.isEmpty()) throw new BusinessException(StatusCode.NULL_ERROR, "未找到该用户");
         return paramList.stream().map(this::getSafeUser).toList();
 
+    }
+
+    @Override
+    public List<User> listStudent(HttpServletRequest request) {
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN, "用户未登录");
+        List<User> userList = this.list();
+        List<User> studentList = new ArrayList<>();
+        if (userList == null) throw new BusinessException(StatusCode.NULL_ERROR, "学生列表为空");
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_role",UserConstant.STUDENT_ROLE);
+        studentList = this.list(queryWrapper);
+        if (studentList.isEmpty()) throw new BusinessException(StatusCode.NULL_ERROR, "学生列表为空");
+        return studentList.stream().map(this::getSafetyTa).toList();
+
+    }
+
+    @Override
+    @Transactional
+    public Long insertUser(UserInsertRequest userInsertRequest) {
+        User newUser = new User();
+        newUser.setUserAccount(userInsertRequest.getUserAccount());
+        newUser.setUserRole(userInsertRequest.getUserRole());
+        newUser.setAge(userInsertRequest.getAge());
+        newUser.setGender(userInsertRequest.getGender());
+        newUser.setEmail(userInsertRequest.getEmail());
+        if(userInsertRequest.getAvatarUrl() == null){
+            newUser.setAvatarUrl("https://pic.616pic.com/ys_img/00/05/09/8LfaQcDrWd.jpg");
+        }else newUser.setAvatarUrl(userInsertRequest.getAvatarUrl());
+        Boolean isInsert = this.save(newUser);
+        if (!isInsert) throw new BusinessException(StatusCode.PARAMS_ERROR, "用户新增更新失败");
+
+        return newUser.getId();
+    }
+
+    @Override
+    public Boolean deleteUser(Long userId) {
+        //删除User表中的数据
+        QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+        userQueryWrapper.eq("id",userId);
+        Boolean userRemove = this.remove(userQueryWrapper);
+
+        //
+
+        return userRemove;
+    }
+
+    @Override
+    public Boolean updateUser(UserUpdateRequest userUpdateRequest) {
+        User user = new User();
+        user.setId(userUpdateRequest.getId());
+        user.setUserAccount(userUpdateRequest.getUserAccount());
+        user.setUserRole(userUpdateRequest.getUserRole());
+        user.setAge(userUpdateRequest.getAge());
+        user.setGender(userUpdateRequest.getGender());
+        user.setEmail(userUpdateRequest.getEmail());
+        user.setAvatarUrl(userUpdateRequest.getAvatarUrl());
+        user.setCreateTime(userUpdateRequest.getCreateTime());
+        Date date = new Date();
+        user.setUpdateTime(date);
+
+        boolean isUpdated = userMapper.updateUser(user);
+        if (!isUpdated) throw new BusinessException(StatusCode.PARAMS_ERROR, "用户信息更新失败");
+
+        return isUpdated;
     }
 
     private User getSafetyTeacher(User user){
