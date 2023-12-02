@@ -2,6 +2,8 @@ package cn.edu.sustech.ooadbackend.service;
 
 import cn.edu.sustech.ooadbackend.model.domain.User;
 import cn.edu.sustech.ooadbackend.model.request.CurrentUserUpdateRequest;
+import cn.edu.sustech.ooadbackend.model.request.UserInsertRequest;
+import cn.edu.sustech.ooadbackend.model.request.UserUpdateRequest;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -97,6 +99,32 @@ public interface UserService extends IService<User> {
      * @return 用户列表
      */
     List<User> listByParam(HttpServletRequest request, String userAccount, Integer userRole, Integer age, Byte gender, String email, String avatarUrl, Date startTime, Date endTime);
+    /**
+     * 获取学生列表
+     * @param request HttpServletRequest
+     * @return 学生列表
+     */
+    List<User> listStudent(HttpServletRequest request);
+    /**
+     * 新增用户信息
+     * @param userInsertRequest
+     * @return 新增用户ID
+     */
+    Long insertUser(UserInsertRequest userInsertRequest);
+    /**
+     * 删除用户信息
+     * @param userId 用户ID
+     * @return 是否成功删除
+     */
+    Boolean deleteUser(Long userId);
+    /**
+     * 根据id更新用户信息
+     * @param userUpdateRequest 更新的用户信息
+     * @return 是否成功更新
+     */
+    Boolean updateUser(UserUpdateRequest userUpdateRequest);
+
+
 
 
 }
