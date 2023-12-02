@@ -117,12 +117,7 @@ public interface UserService extends IService<User> {
      * @return 是否成功删除
      */
     Boolean deleteUser(Long userId);
-    /**
-     * 根据id更新用户信息
-     * @param userUpdateRequest 更新的用户信息
-     * @return 是否成功更新
-     */
-    Boolean updateUser(UserUpdateRequest userUpdateRequest);
+
 
 
 
