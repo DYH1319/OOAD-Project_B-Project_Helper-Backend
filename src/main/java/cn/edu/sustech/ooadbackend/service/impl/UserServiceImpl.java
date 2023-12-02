@@ -330,25 +330,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return userRemove;
     }
 
-    @Override
-    public Boolean updateUser(UserUpdateRequest userUpdateRequest) {
-        User user = new User();
-        user.setId(userUpdateRequest.getId());
-        user.setUserAccount(userUpdateRequest.getUserAccount());
-        user.setUserRole(userUpdateRequest.getUserRole());
-        user.setAge(userUpdateRequest.getAge());
-        user.setGender(userUpdateRequest.getGender());
-        user.setEmail(userUpdateRequest.getEmail());
-        user.setAvatarUrl(userUpdateRequest.getAvatarUrl());
-        user.setCreateTime(userUpdateRequest.getCreateTime());
-        Date date = new Date();
-        user.setUpdateTime(date);
 
-        boolean isUpdated = userMapper.updateUser(user);
-        if (!isUpdated) throw new BusinessException(StatusCode.PARAMS_ERROR, "用户信息更新失败");
-
-        return isUpdated;
-    }
 
     private User getSafetyTeacher(User user){
         User safeTeacher = new User();
