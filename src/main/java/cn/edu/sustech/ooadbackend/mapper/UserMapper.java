@@ -17,5 +17,6 @@ import org.apache.ibatis.annotations.Param;
 public interface UserMapper extends BaseMapper<User> {
 
     boolean updateCurrentUser(User newUser);
+    boolean updateUser(User newUser);
 
 }

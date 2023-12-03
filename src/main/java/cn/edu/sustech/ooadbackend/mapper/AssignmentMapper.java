@@ -14,4 +14,5 @@ import org.apache.ibatis.annotations.Mapper;
     
 @Mapper
 public interface AssignmentMapper extends BaseMapper<Assignment> {
+    boolean update(Assignment newAssignment);
 }
