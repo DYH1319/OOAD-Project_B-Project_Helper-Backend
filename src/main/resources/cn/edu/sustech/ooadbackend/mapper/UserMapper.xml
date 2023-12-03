@@ -31,5 +31,10 @@
     update t_user set age = #{age}, avatar_url = #{avatarUrl}, technical_stack = #{technicalStack}, programming_skills = #{programmingSkills}, intended_teammates = #{intendedTeammates} where id = #{id};
   </update>
 
+  <update id="updateUser" parameterType="cn.edu.sustech.ooadbackend.model.domain.User">
+    update t_user set age = #{age}, user_account = #{userAccount}, user_role = #{userRole}, gender = #{gender}, email = #{email},avatar_url = #{avatarUrl},create_time = #{createTime},update_time = #{updateTime} where id = #{id};
+  </update>
+
+
 
 </mapper>

@@ -21,4 +21,7 @@
     id, project_name, description, group_number, max_number, group_deadline, end_deadline, 
     course_id, is_deleted, create_time, update_time
   </sql>
+  <update id="updateProject" parameterType="cn.edu.sustech.ooadbackend.model.domain.Project">
+    update t_project set  project_name = #{projectName},description = #{description}, group_deadline = #{groupDeadline},end_deadline = #{endDeadline} where id = #{id};
+  </update>
 </mapper>
