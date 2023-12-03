@@ -197,8 +197,7 @@ public class UserController {
         if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
         if(currentUser.getUserRole() < UserConstant.TEACHER_ASSISTANT_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非教师助理用户不能查看所有学生列表");
 
-
-
+        
         List<User> studentList = userService.listStudent(request);
         return ResponseUtils.success(studentList.toArray(User[] :: new));
     }
