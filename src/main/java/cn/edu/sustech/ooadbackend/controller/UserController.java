@@ -141,7 +141,7 @@ public class UserController {
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
         // 确认用户是否登录
         if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
-        if(currentUser.getUserRole() != UserConstant.TEACHER_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非教师用户不能查看所有助教列表");
+        if(currentUser.getUserRole() <  UserConstant.TEACHER_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非教师用户不能查看所有助教列表");
 
 
 
@@ -195,7 +195,7 @@ public class UserController {
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
         // 确认用户是否登录
         if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
-        if(currentUser.getUserRole() != UserConstant.TEACHER_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非教师用户不能查看所有助教列表");
+        if(currentUser.getUserRole() < UserConstant.TEACHER_ASSISTANT_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非教师助理用户不能查看所有学生列表");
 
 
 
@@ -255,7 +255,8 @@ public class UserController {
      * @param userUpdateRequest 更新的用户信息
      * @return 是否成功更新
      */
-    /*@PostMapping("/update")
+
+ @PostMapping("/update")
     public BaseResponse<Boolean> updateUser(HttpServletRequest request, @RequestBody UserUpdateRequest userUpdateRequest){
 
         // 校验参数
@@ -274,7 +275,6 @@ public class UserController {
         return ResponseUtils.success(updated);
     }
 
-     */
 
 
 

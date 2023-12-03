@@ -118,7 +118,7 @@ public interface UserService extends IService<User> {
      */
     Boolean deleteUser(Long userId);
 
-
+    Boolean updateUser(UserUpdateRequest userUpdateRequest);
 
 
 

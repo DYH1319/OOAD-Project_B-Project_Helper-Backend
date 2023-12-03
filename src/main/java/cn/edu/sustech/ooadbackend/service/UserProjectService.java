@@ -2,7 +2,9 @@ package cn.edu.sustech.ooadbackend.service;
 
 import cn.edu.sustech.ooadbackend.model.domain.UserProject;
 import com.baomidou.mybatisplus.extension.service.IService;
-    
+
+import java.util.List;
+
 /**
  * @className UserProjectService
  * @version 1.0
@@ -11,6 +13,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
     
 public interface UserProjectService extends IService<UserProject>{
+    List<UserProject> listUserProjectByUserId(Long userID);
 
 
 }
