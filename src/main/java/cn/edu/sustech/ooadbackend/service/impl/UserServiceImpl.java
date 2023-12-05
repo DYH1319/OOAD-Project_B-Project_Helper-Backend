@@ -9,6 +9,7 @@ import cn.edu.sustech.ooadbackend.model.request.CurrentUserUpdateRequest;
 import cn.edu.sustech.ooadbackend.model.request.UserInsertRequest;
 import cn.edu.sustech.ooadbackend.model.request.UserUpdateRequest;
 import cn.edu.sustech.ooadbackend.service.UserService;
+import cn.edu.sustech.ooadbackend.utils.DateTimeFormatTransferUtils;
 import cn.edu.sustech.ooadbackend.utils.RedisClient;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @className UserServiceImpl
@@ -60,9 +62,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(User::getUserAccount, userAccount);
         User selectUser = this.getOne(lambdaQueryWrapper);
-        if (selectUser != null) throw new BusinessException(StatusCode.PARAMS_ERROR, "账户名已存在");
+        if (selectUser != null) throw new BusinessException(StatusCode.PARAMS_ERROR, "学工号已存在");
         // 2. 加密
-        String encryptPassword = DigestUtils.md5DigestAsHex((UserConstant.SALT + userPassword).getBytes(StandardCharsets.UTF_8));
+        String encryptPassword = md5EncryptPassword(userPassword);
         // 3. 插入数据
         User user = new User();
         user.setUserAccount(userAccount);
@@ -79,13 +81,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 校验非null非空
         if (StringUtils.isAnyBlank(userAccount, userPassword)) throw new BusinessException(StatusCode.PARAMS_ERROR, "参数为空");
         // 2. 加密并校验账户密码是否正确
-        String encryptPassword = DigestUtils.md5DigestAsHex((UserConstant.SALT + userPassword).getBytes(StandardCharsets.UTF_8));
+        String encryptPassword = md5EncryptPassword(userPassword);
         // 查询用户是否存在
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(User::getUserAccount, userAccount);
         User user = this.getOne(lambdaQueryWrapper);
         if (user == null) {
-            throw new BusinessException(StatusCode.PARAMS_ERROR, "账号不存在");
+            throw new BusinessException(StatusCode.PARAMS_ERROR, "学工号不存在");
         }
         // 查询账户密码是否匹配
         lambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -114,7 +116,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         
         String code = generateVerificationCode();
-        String mailAddressPrefix = mailAddress.split("@")[0] + "@@@";
+        String mailAddressPrefix = mailAddress + "@@@";
         
         if (redisClient.get(mailAddressPrefix) != null) {
             throw new BusinessException(StatusCode.PARAMS_ERROR, "请勿频繁请求验证码");
@@ -211,6 +213,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         int randomNum = ThreadLocalRandom.current().nextInt(min, max + 1);
         return String.format("%06d", randomNum);
     }
+    
+    private String md5EncryptPassword(String originPassword) {
+        return DigestUtils.md5DigestAsHex((UserConstant.SALT + originPassword).getBytes(StandardCharsets.UTF_8));
+    }
 
     @Override
     public Boolean currentUserUpdate(HttpServletRequest request, CurrentUserUpdateRequest currentUserRequest) {
@@ -264,25 +270,39 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public List<User> listByParam(HttpServletRequest request, String userAccount, Integer userRole, Integer age, Byte gender, String email, String avatarUrl, Date startTime, Date endTime) {
-        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
-        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN, "用户未登录");
-        List<User> userList = this.list();
-        List<User> paramList ;
-        if (userList == null) throw new BusinessException(StatusCode.NULL_ERROR, "用户列表为空");
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_account",userAccount)
-                .eq("user_role",userRole)
-                .eq("age",age)
-                .eq("gender",gender)
-                .eq("email",email)
-                .eq("avatar_url",avatarUrl)
-                .eq("create_time",startTime)
-                .eq("update_time",endTime);
-        paramList = this.list(queryWrapper);
-        if (paramList.isEmpty()) throw new BusinessException(StatusCode.NULL_ERROR, "未找到该用户");
-        return paramList.stream().map(this::getSafeUser).toList();
-
+    public List<User> listByParam(HttpServletRequest request, String userAccount, String username, Integer userRole, Integer age, Byte gender, String email, String avatarUrl, String startTime, String endTime) {
+        Date start = DateTimeFormatTransferUtils.frontDateTime2BackDate(startTime);
+        Date end = DateTimeFormatTransferUtils.frontDateTime2BackDate(endTime);
+        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        if (StringUtils.isNotBlank(userAccount)) {
+            lambdaQueryWrapper.like(User::getUserAccount, userAccount);
+        }
+        if (StringUtils.isNotBlank(username)) {
+            lambdaQueryWrapper.like(User::getUsername, username);
+        }
+        if (StringUtils.isNotBlank(avatarUrl)) {
+            lambdaQueryWrapper.like(User::getAvatarUrl, avatarUrl);
+        }
+        if (gender != null) {
+            lambdaQueryWrapper.eq(User::getGender, gender);
+        }
+        if (age != null) {
+            lambdaQueryWrapper.eq(User::getAge, age);
+        }
+        if (StringUtils.isNotBlank(email)) {
+            lambdaQueryWrapper.like(User::getEmail, email);
+        }
+        if (userRole != null) {
+            lambdaQueryWrapper.eq(User::getUserRole, userRole);
+        }
+        if (start != null) {
+            lambdaQueryWrapper.ge(User::getCreateTime, startTime);
+        }
+        if (end != null) {
+            lambdaQueryWrapper.le(User::getCreateTime, endTime);
+        }
+        List<User> userList = userMapper.selectList(lambdaQueryWrapper);
+        return userList.stream().map(this::getSafetyUser).collect(Collectors.toList());
     }
 
     @Override
@@ -297,23 +317,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         studentList = this.list(queryWrapper);
         if (studentList.isEmpty()) throw new BusinessException(StatusCode.NULL_ERROR, "学生列表为空");
         return studentList.stream().map(this::getSafetyTa).toList();
-
     }
 
     @Override
     @Transactional
     public Long insertUser(UserInsertRequest userInsertRequest) {
+        // 校验账户不能与已有账户重复（需要访问数据库的校验应该在校验的最后执行以优化性能）
+        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(User::getUserAccount, userInsertRequest.getUserAccount());
+        User selectUser = this.getOne(lambdaQueryWrapper);
+        if (selectUser != null) throw new BusinessException(StatusCode.PARAMS_ERROR, "学工号已存在");
+        
         User newUser = new User();
         newUser.setUserAccount(userInsertRequest.getUserAccount());
+        newUser.setUsername(userInsertRequest.getUsername());
+        newUser.setUserPassword(md5EncryptPassword(userInsertRequest.getUserAccount()));
         newUser.setUserRole(userInsertRequest.getUserRole());
         newUser.setAge(userInsertRequest.getAge());
         newUser.setGender(userInsertRequest.getGender());
         newUser.setEmail(userInsertRequest.getEmail());
-        if(userInsertRequest.getAvatarUrl() == null){
-            newUser.setAvatarUrl("https://pic.616pic.com/ys_img/00/05/09/8LfaQcDrWd.jpg");
-        }else newUser.setAvatarUrl(userInsertRequest.getAvatarUrl());
-        Boolean isInsert = this.save(newUser);
-        if (!isInsert) throw new BusinessException(StatusCode.PARAMS_ERROR, "用户新增更新失败");
+        boolean isInsert = this.save(newUser);
+        if (!isInsert) throw new BusinessException(StatusCode.PARAMS_ERROR, "用户新增失败");
 
         return newUser.getId();
     }
@@ -326,8 +350,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userQueryWrapper.eq("id",userId);
         Boolean userRemove = this.remove(userQueryWrapper);
 
-        //
-
         return userRemove;
     }
     @Override
@@ -336,14 +358,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = new User();
         user.setId(userUpdateRequest.getId());
         user.setUserAccount(userUpdateRequest.getUserAccount());
+        user.setUsername(userUpdateRequest.getUsername());
         user.setUserRole(userUpdateRequest.getUserRole());
         user.setAge(userUpdateRequest.getAge());
         user.setGender(userUpdateRequest.getGender());
         user.setEmail(userUpdateRequest.getEmail());
         user.setAvatarUrl(userUpdateRequest.getAvatarUrl());
-        user.setCreateTime(userUpdateRequest.getCreateTime());
-        Date date = new Date();
-        user.setUpdateTime(date);
 
         boolean isUpdated = userMapper.updateUser(user);
         if (!isUpdated) throw new BusinessException(StatusCode.PARAMS_ERROR, "用户信息更新失败");

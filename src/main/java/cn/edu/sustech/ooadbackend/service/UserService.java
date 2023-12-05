@@ -98,7 +98,7 @@ public interface UserService extends IService<User> {
      * @param endTime
      * @return 用户列表
      */
-    List<User> listByParam(HttpServletRequest request, String userAccount, Integer userRole, Integer age, Byte gender, String email, String avatarUrl, Date startTime, Date endTime);
+    List<User> listByParam(HttpServletRequest request, String userAccount, String name, Integer userRole, Integer age, Byte gender, String email, String avatarUrl, String startTime, String endTime);
     /**
      * 获取学生列表
      * @param request HttpServletRequest

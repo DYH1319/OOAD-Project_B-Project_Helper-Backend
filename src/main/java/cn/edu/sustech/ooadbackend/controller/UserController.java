@@ -165,13 +165,14 @@ public class UserController {
     public BaseResponse<User[]> listByParams(
             HttpServletRequest request,
             @RequestParam(name = "userAccount", required = false) String userAccount,
+            @RequestParam(name = "username", required = false) String username,
             @RequestParam(name = "userRole", required = false) Integer userRole,
             @RequestParam(name = "age", required = false) Integer age,
             @RequestParam(name = "gender", required = false) Byte gender,
             @RequestParam(name = "email", required = false) String email,
             @RequestParam(name = "avatarUrl", required = false) String avatarUrl,
-            @RequestParam(name = "startTime", required = false) Date startTime,
-            @RequestParam(name = "endTime", required = false) Date endTime
+            @RequestParam(name = "startTime", required = false) String startTime,
+            @RequestParam(name = "endTime", required = false) String endTime
     ) {
         if (request == null) throw new BusinessException(StatusCode.SYSTEM_ERROR);
         // 获取用户登录态
@@ -179,7 +180,7 @@ public class UserController {
         // 确认用户是否登录
         if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
         if(currentUser.getUserRole() != UserConstant.ADMIN_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非管理员用户不能查看该用户列表");
-        List<User> userList = userService.listByParam( request,  userAccount,  userRole,  age,  gender,  email,  avatarUrl,  startTime,  endTime);
+        List<User> userList = userService.listByParam( request,  userAccount,  username, userRole,  age,  gender,  email,  avatarUrl,  startTime,  endTime);
         return ResponseUtils.success(userList.toArray(User[] :: new ));
     }
     /**
@@ -217,7 +218,7 @@ public class UserController {
         if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
 
         // 确认用户是否有管理员权限
-        if (currentUser.getUserRole() != UserConstant.ADMIN_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非管理员用户不能修改课程信息");
+        if (currentUser.getUserRole() != UserConstant.ADMIN_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非管理员用户不能新建用户");
 
         Long insertUser = userService.insertUser(userId);
         return ResponseUtils.success(insertUser, "成功新增用户");
@@ -226,14 +227,14 @@ public class UserController {
     /**
      * 删除用户信息
      * @param request HttpServletRequest
-     * @param userDeleteRequest 待删除的用户请求
+     * @param id 待删除的用户id
      * @return 是否成功删除
      */
     @PostMapping("/delete")
-    public BaseResponse<Boolean> deleteUser(HttpServletRequest request, @RequestBody UserDeleteRequest userDeleteRequest){
+    public BaseResponse<Boolean> deleteUser(HttpServletRequest request, @RequestBody Long id){
 
         // 校验参数
-        if (userDeleteRequest == null || userDeleteRequest.getId() <= 0) throw new BusinessException(StatusCode.PARAMS_ERROR, "删除课程参数出错");
+        if (id == null || id <= 0) throw new BusinessException(StatusCode.PARAMS_ERROR, "删除课程参数出错");
 
         // 获取用户登录态
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
@@ -242,9 +243,9 @@ public class UserController {
         if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
 
         // 确认用户是否有管理员权限
-        if (currentUser.getUserRole() != UserConstant.ADMIN_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非管理员用户不能修改课程信息");
+        if (currentUser.getUserRole() != UserConstant.ADMIN_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非管理员用户不能删除用户");
 
-        Boolean deleted = userService.deleteUser(userDeleteRequest.getId());
+        Boolean deleted = userService.deleteUser(id);
         return ResponseUtils.success(deleted, "成功删除用户信息");
     }
 
