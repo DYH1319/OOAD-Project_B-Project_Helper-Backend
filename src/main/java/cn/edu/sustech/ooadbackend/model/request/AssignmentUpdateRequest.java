@@ -7,11 +7,11 @@ import java.util.Date;
 @Data
 public class AssignmentUpdateRequest {
     //assignmentId, title, description, startTime, endTime, assignmentType
-    private Long assignmentId;
+    private Long id;
     private String title;
     private String description;
-    private Date startTime;
-    private Date endTime;
+    private String startTime;
+    private String endTime;
     private Byte assignmentType;
 
 }

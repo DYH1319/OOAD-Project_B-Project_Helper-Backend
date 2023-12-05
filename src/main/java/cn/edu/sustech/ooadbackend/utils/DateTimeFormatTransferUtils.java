@@ -27,7 +27,11 @@ public class DateTimeFormatTransferUtils {
         try {
             return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(dateTime);
         } catch (ParseException e) {
-            return null;
+            try {
+                return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").parse(dateTime);
+            } catch (ParseException ee) {
+                return null;
+            }
         }
     }
 }

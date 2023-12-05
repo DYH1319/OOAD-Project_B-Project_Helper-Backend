@@ -104,14 +104,14 @@ public class AssignmentController {
     /**
      * 删除作业信息
      * @param request HttpServletRequest
-     * @param assignmentDeleteRequest 待删除的课程请求
+     * @param id 待删除的课程请求
      * @return 是否成功删除
      */
     @PostMapping("/delete")
-    public BaseResponse<Boolean> delete(HttpServletRequest request, @RequestBody AssignmentDeleteRequest assignmentDeleteRequest){
+    public BaseResponse<Boolean> delete(HttpServletRequest request, @RequestBody Long id){
 
         // 校验参数
-        if (assignmentDeleteRequest == null ||assignmentDeleteRequest.getAssignmentId() <= 0) throw new BusinessException(StatusCode.PARAMS_ERROR, "删除作业参数出错");
+        if (id == null || id <= 0) throw new BusinessException(StatusCode.PARAMS_ERROR, "删除作业参数出错");
 
         // 获取用户登录态
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
@@ -122,7 +122,7 @@ public class AssignmentController {
         // 确认用户是否有管理员权限
         if (currentUser.getUserRole() < UserConstant.TEACHER_ASSISTANT_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非教师助理用户不能修改作业信息");
 
-        Boolean deleted = assignmentService.deleteAssignment(assignmentDeleteRequest.getAssignmentId());
+        Boolean deleted = assignmentService.deleteAssignment(id);
         return ResponseUtils.success(deleted, "成功删除作业信息");
     }
 

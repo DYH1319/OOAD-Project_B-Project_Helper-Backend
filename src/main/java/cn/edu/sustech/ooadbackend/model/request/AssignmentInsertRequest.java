@@ -10,8 +10,8 @@ public class AssignmentInsertRequest {
 private Long courseId;
 private String title;
 private String description;
-private Date startTime;
-private Date endTime;
+private String startTime;
+private String endTime;
 private Byte assignmentType;
 
 }

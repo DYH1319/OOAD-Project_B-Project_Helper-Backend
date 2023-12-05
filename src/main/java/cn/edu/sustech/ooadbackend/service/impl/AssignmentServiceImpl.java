@@ -7,6 +7,7 @@ import cn.edu.sustech.ooadbackend.model.domain.Assignment;
 import cn.edu.sustech.ooadbackend.model.request.AssignmentInsertRequest;
 import cn.edu.sustech.ooadbackend.model.request.AssignmentUpdateRequest;
 import cn.edu.sustech.ooadbackend.service.AssignmentService;
+import cn.edu.sustech.ooadbackend.utils.DateTimeFormatTransferUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
@@ -47,8 +48,8 @@ private AssignmentMapper assignmentMapper;
         newAssignment.setCourseId(assignmentInsertRequest.getCourseId());
         newAssignment.setDescription(assignmentInsertRequest.getDescription());
         newAssignment.setTitle(assignmentInsertRequest.getTitle());
-        newAssignment.setStartTime(assignmentInsertRequest.getStartTime());
-        newAssignment.setEndTime(assignmentInsertRequest.getEndTime());
+        newAssignment.setStartTime(DateTimeFormatTransferUtils.frontDateTime2BackDate(assignmentInsertRequest.getStartTime()));
+        newAssignment.setEndTime(DateTimeFormatTransferUtils.frontDateTime2BackDate(assignmentInsertRequest.getEndTime()));
         newAssignment.setAssignmentType(assignmentInsertRequest.getAssignmentType());
         Boolean isInsert = this.save(newAssignment);
         if (!isInsert) throw new BusinessException(StatusCode.PARAMS_ERROR, "作业发布失败");
@@ -59,11 +60,11 @@ private AssignmentMapper assignmentMapper;
     @Transactional
     public Boolean updateAssignment(AssignmentUpdateRequest assignmentUpdateRequest) {
     Assignment newAssignment = new Assignment();
-        newAssignment.setId(assignmentUpdateRequest.getAssignmentId());
+        newAssignment.setId(assignmentUpdateRequest.getId());
         newAssignment.setDescription(assignmentUpdateRequest.getDescription());
         newAssignment.setTitle(assignmentUpdateRequest.getTitle());
-        newAssignment.setStartTime(assignmentUpdateRequest.getStartTime());
-        newAssignment.setEndTime(assignmentUpdateRequest.getEndTime());
+        newAssignment.setStartTime(DateTimeFormatTransferUtils.frontDateTime2BackDate(assignmentUpdateRequest.getStartTime()));
+        newAssignment.setEndTime(DateTimeFormatTransferUtils.frontDateTime2BackDate(assignmentUpdateRequest.getEndTime()));
         newAssignment.setAssignmentType(assignmentUpdateRequest.getAssignmentType());
         boolean isUpdated = assignmentMapper.update(newAssignment);
         if (!isUpdated) throw new BusinessException(StatusCode.PARAMS_ERROR, "作业信息更新失败");
@@ -88,7 +89,10 @@ private AssignmentMapper assignmentMapper;
         Assignment newAssignment = new Assignment();
         newAssignment.setId(assignment.getId());
         newAssignment.setTitle(assignment.getTitle());
+        newAssignment.setDescription(assignment.getDescription());
+        newAssignment.setStartTime(assignment.getStartTime());
         newAssignment.setEndTime(assignment.getEndTime());
+        newAssignment.setAssignmentType(assignment.getAssignmentType());
         return newAssignment;
     }
 }
