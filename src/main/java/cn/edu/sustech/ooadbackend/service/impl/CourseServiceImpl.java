@@ -317,7 +317,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
         User courseTeacher = userService.getOne(teacherQuery);
 
-        if (courseTeacher == null) throw new BusinessException(StatusCode.SYSTEM_ERROR, "查询课程教师时发生系统错误");
+        // if (courseTeacher == null) throw new BusinessException(StatusCode.SYSTEM_ERROR, "查询课程教师时发生系统错误");
 
         // 获取课程Ta姓名列表
         QueryWrapper<TeacherAssistantCourse> taQuery = new QueryWrapper<>();
@@ -325,11 +325,14 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
         List<TeacherAssistantCourse> taList = teacherAssistantCourseService.list(taQuery);
         List<Long> taIdList = taList.stream().map(TeacherAssistantCourse::getTeacherAssistantId).toList();
-
-        QueryWrapper<User> taUserQuery = new QueryWrapper<>();
-        taUserQuery.in("id", taIdList);
-        List<User> tas = userService.list(taUserQuery);
-        List<String> taNameList = tas.stream().map(User::getUsername).toList();
+        
+        List<String> taNameList = null;
+        if (taIdList.size() != 0) {
+            QueryWrapper<User> taUserQuery = new QueryWrapper<>();
+            taUserQuery.in("id", taIdList);
+            List<User> tas = userService.list(taUserQuery);
+            taNameList = tas.stream().map(User::getUsername).toList();
+        }
 
         // 获取学生人数
         QueryWrapper<UserCourse> studentQuery = new QueryWrapper<>();
@@ -338,8 +341,8 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         long studentNum = userCourseService.count(studentQuery);
 
         detailedCourse.setCourseName(course.getCourseName());
-        detailedCourse.setTeacherName(courseTeacher.getUsername());
-        detailedCourse.setTaNameList(taNameList.toArray(String[]::new));
+        if (courseTeacher != null) detailedCourse.setTeacherName(courseTeacher.getUsername());
+        if (taIdList.size() != 0) detailedCourse.setTaNameList(taNameList.toArray(String[]::new));
         detailedCourse.setStudentNum(studentNum);
         detailedCourse.setCreateTime(course.getCreateTime());
 
