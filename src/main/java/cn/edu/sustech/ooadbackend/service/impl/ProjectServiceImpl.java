@@ -9,6 +9,7 @@ import cn.edu.sustech.ooadbackend.model.request.ProjectInsertRequest;
 import cn.edu.sustech.ooadbackend.model.request.ProjectUpdateRequest;
 import cn.edu.sustech.ooadbackend.service.ProjectService;
 import cn.edu.sustech.ooadbackend.service.UserProjectService;
+import cn.edu.sustech.ooadbackend.utils.DateTimeFormatTransferUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
@@ -69,8 +70,8 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
        project.setProjectName(projectInsertRequest.getProjectName());
        project.setCourseId(projectInsertRequest.getCourseId());
        project.setDescription(projectInsertRequest.getDescription());
-       project.setGroupDeadline(projectInsertRequest.getGroupDeadline());
-       project.setEndDeadline(projectInsertRequest.getEndDeadline());
+       project.setGroupDeadline(DateTimeFormatTransferUtils.frontDateTime2BackDate(projectInsertRequest.getGroupDeadline()));
+       project.setEndDeadline(DateTimeFormatTransferUtils.frontDateTime2BackDate(projectInsertRequest.getEndDeadline()));
 
         Boolean isInsert = this.save(project);
         if (!isInsert) throw new BusinessException(StatusCode.PARAMS_ERROR, "项目发布失败");
@@ -82,11 +83,11 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     @Transactional
     public Boolean updateProject(ProjectUpdateRequest projectUpdateRequest) {
         Project project = new Project();
-        project.setId(projectUpdateRequest.getProjectId());
+        project.setId(projectUpdateRequest.getId());
         project.setProjectName(projectUpdateRequest.getProjectName());
         project.setDescription(projectUpdateRequest.getDescription());
-        project.setGroupDeadline(projectUpdateRequest.getGroupDeadline());
-        project.setEndDeadline(projectUpdateRequest.getEndDeadline());
+        project.setGroupDeadline(DateTimeFormatTransferUtils.frontDateTime2BackDate(projectUpdateRequest.getGroupDeadline()));
+        project.setEndDeadline(DateTimeFormatTransferUtils.frontDateTime2BackDate(projectUpdateRequest.getEndDeadline()));
 
         boolean isUpdated = projectMapper.updateProject(project);
         if (!isUpdated) throw new BusinessException(StatusCode.PARAMS_ERROR, "项目信息更新失败");
@@ -109,6 +110,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         Project newProject = new Project();
         newProject.setId(project.getId());
         newProject.setProjectName(project.getProjectName());
+        newProject.setDescription(project.getDescription());
         newProject.setGroupDeadline(project.getGroupDeadline());
         newProject.setEndDeadline(project.getEndDeadline());
         return newProject;

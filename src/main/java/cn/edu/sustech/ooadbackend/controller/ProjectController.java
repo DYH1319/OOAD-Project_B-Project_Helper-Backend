@@ -88,14 +88,14 @@ public class ProjectController {
     /**
      * 删除项目信息
      * @param request HttpServletRequest
-     * @param projectDeleteRequest 待删除的项目请求
+     * @param id 待删除的项目请求
      * @return 是否成功删除
      */
     @PostMapping("/delete")
-    public BaseResponse<Boolean> delete(HttpServletRequest request, @RequestBody ProjectDeleteRequest projectDeleteRequest){
+    public BaseResponse<Boolean> delete(HttpServletRequest request, @RequestBody Long id){
 
         // 校验参数
-        if (projectDeleteRequest == null || projectDeleteRequest.getProjectId() <= 0) throw new BusinessException(StatusCode.PARAMS_ERROR, "删除课程参数出错");
+        if (id == null || id <= 0) throw new BusinessException(StatusCode.PARAMS_ERROR, "删除课程参数出错");
 
         // 获取用户登录态
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
@@ -106,7 +106,7 @@ public class ProjectController {
         // 确认用户是否有教师助理权限
         if (currentUser.getUserRole() < UserConstant.TEACHER_ASSISTANT_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非教师助理用户不能修改课程信息");
 
-        Boolean deleted = projectService.deleteProject(projectDeleteRequest.getProjectId());
+        Boolean deleted = projectService.deleteProject(id);
         return ResponseUtils.success(deleted, "成功删除项目信息");
     }
 

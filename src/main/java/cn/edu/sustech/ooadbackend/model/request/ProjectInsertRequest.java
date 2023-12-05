@@ -10,7 +10,7 @@ public class ProjectInsertRequest {
     private  Long courseId;
     private String projectName;
     private String description;
-    private Date groupDeadline;
-    private Date endDeadline;
+    private String groupDeadline;
+    private String endDeadline;
 
 }
