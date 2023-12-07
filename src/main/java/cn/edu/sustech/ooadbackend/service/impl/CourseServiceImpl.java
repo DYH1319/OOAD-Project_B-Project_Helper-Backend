@@ -118,7 +118,8 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         userQueryWrapper.eq("user_role", UserConstant.TEACHER_ASSISTANT_ROLE);
         List<User> taUserList = userService.list(userQueryWrapper);
         List<Long> toIdList = taUserList.stream().map(User::getId).toList();
-        List<Long> newtTaIdList = Arrays.asList(courseUpdateRequest.getTaIdList());
+        List<Long> newtTaIdList = new ArrayList<>();
+        if (courseUpdateRequest.getTaIdList() != null) newtTaIdList = Arrays.asList(courseUpdateRequest.getTaIdList());
         if (!new HashSet<>(toIdList).containsAll(newtTaIdList)) throw new BusinessException(StatusCode.PARAMS_ERROR, "助教列表中含有非法用户");
 
         Boolean b = teacherAssistantCourseService.removeByCourseId(courseUpdateRequest.getId());
@@ -131,9 +132,9 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         }).toList();
 
         Boolean saveBatch = teacherAssistantCourseService.saveBatch(newTeacherAssistantCourses);
-        if (saveBatch != true && courseUpdateRequest.getTaIdList().length > 0) throw new BusinessException(StatusCode.PARAMS_ERROR, "课程信息更新失败");
+        if (saveBatch != true && courseUpdateRequest.getTaIdList() != null) throw new BusinessException(StatusCode.PARAMS_ERROR, "课程信息更新失败");
 
-        return saveBatch;
+        return true;
     }
 
     @Override

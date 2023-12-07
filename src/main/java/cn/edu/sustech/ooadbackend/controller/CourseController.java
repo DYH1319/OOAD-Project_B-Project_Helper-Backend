@@ -81,14 +81,14 @@ public class CourseController {
     /**
      * 删除课程信息
      * @param request HttpServletRequest
-     * @param courseDeleteRequest 待删除的课程请求
+     * @param id 待删除的课程请求
      * @return 是否成功删除
      */
     @PostMapping("/delete")
-    public BaseResponse<Boolean> deleteCourse(HttpServletRequest request, @RequestBody(required = false) CourseDeleteRequest courseDeleteRequest){
+    public BaseResponse<Boolean> deleteCourse(HttpServletRequest request, @RequestBody(required = false) Long id){
 
         // 校验参数
-        if (courseDeleteRequest == null || courseDeleteRequest.getId() <= 0) throw new BusinessException(StatusCode.PARAMS_ERROR, "删除课程参数出错");
+        if (id == null || id <= 0) throw new BusinessException(StatusCode.PARAMS_ERROR, "删除课程参数出错");
 
         // 获取用户登录态
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
@@ -99,7 +99,7 @@ public class CourseController {
         // 确认用户是否有管理员权限
         if (currentUser.getUserRole() != UserConstant.ADMIN_ROLE) throw new BusinessException(StatusCode.NO_AUTH, "非管理员用户不能修改课程信息");
 
-        Boolean deleted = courseService.deleteCourse(courseDeleteRequest.getId());
+        Boolean deleted = courseService.deleteCourse(id);
         return ResponseUtils.success(deleted, "成功删除课程信息");
     }
 

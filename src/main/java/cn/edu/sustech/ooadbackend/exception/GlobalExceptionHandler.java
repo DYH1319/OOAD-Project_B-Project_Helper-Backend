@@ -24,9 +24,9 @@ public class GlobalExceptionHandler {
         return ResponseUtils.fail(e.getStatusCode(), e.getDescription());
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public BaseResponse<?> runtimeExceptionHandler(RuntimeException e) {
-        log.error("runtimeException: " + e.getMessage() + e);
-        return ResponseUtils.fail(StatusCode.SYSTEM_ERROR, StatusCode.SYSTEM_ERROR.getMessage());
-    }
+//    @ExceptionHandler(RuntimeException.class)
+//    public BaseResponse<?> runtimeExceptionHandler(RuntimeException e) {
+//        log.error("runtimeException: " + e.getMessage() + e);
+//        return ResponseUtils.fail(StatusCode.SYSTEM_ERROR, StatusCode.SYSTEM_ERROR.getMessage());
+//    }
 }
