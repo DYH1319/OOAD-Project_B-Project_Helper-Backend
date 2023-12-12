@@ -89,7 +89,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
 
-        if (currentUser.getUserRole() == UserConstant.TEACHER_ROLE || currentUser.getUserRole() == UserConstant.TEACHER_ASSISTANT_ROLE){
+        if (currentUser.getUserRole() == UserConstant.TEACHER_ROLE || currentUser.getUserRole() == UserConstant.TEACHER_ASSISTANT_ROLE || currentUser.getUserRole() == UserConstant.ADMIN_ROLE){
 
             // 获取当前用户作为接收方的所有通知
             QueryWrapper<UserNotification> notificationQueryWrapper = new QueryWrapper<>();
@@ -111,16 +111,18 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
             return notificationsList.stream().map(this::getSimplifiedNotification).toArray(Notification[]::new);
 
-        } else if (currentUser.getUserRole() == UserConstant.ADMIN_ROLE) {
-
-            // 获取所有通知
-            List<Notification> notificationList = this.list();
-
-            if (notificationList.isEmpty()) throw new BusinessException(StatusCode.PARAMS_ERROR, "未找到任何通知");
-
-            return notificationList.stream().map(this::getSimplifiedNotification).toArray(Notification[]::new);
-
-        } else if (currentUser.getUserRole() == UserConstant.STUDENT_ROLE){
+        }
+        // else if (currentUser.getUserRole() == UserConstant.ADMIN_ROLE) {
+        //
+        //     // 获取所有通知
+        //     List<Notification> notificationList = this.list();
+        //
+        //     if (notificationList.isEmpty()) throw new BusinessException(StatusCode.PARAMS_ERROR, "未找到任何通知");
+        //
+        //     return notificationList.stream().map(this::getSimplifiedNotification).toArray(Notification[]::new);
+        //
+        // }
+        else if (currentUser.getUserRole() == UserConstant.STUDENT_ROLE){
 
             // 获取当前用户作为接收方的所有通知
             QueryWrapper<UserNotification> notificationQueryWrapper = new QueryWrapper<>();
