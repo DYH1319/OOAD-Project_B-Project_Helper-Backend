@@ -1,5 +1,6 @@
 package cn.edu.sustech.ooadbackend.service;
 
+import cn.edu.sustech.ooadbackend.constant.UserConstant;
 import cn.edu.sustech.ooadbackend.model.domain.Course;
 import cn.edu.sustech.ooadbackend.model.domain.Notification;
 import cn.edu.sustech.ooadbackend.model.domain.User;
@@ -9,6 +10,7 @@ import cn.edu.sustech.ooadbackend.model.request.NotificationInsertRequest;
 import cn.edu.sustech.ooadbackend.model.response.CourseInfoResponse;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.servlet.handler.UserRoleAuthorizationInterceptor;
 
 import java.util.List;
 
@@ -20,6 +22,8 @@ import java.util.List;
  */
     
 public interface CourseService extends IService<Course>{
+
+
 
     /**
      * 根据当前用户不同的权限列举课程信息
@@ -56,6 +60,21 @@ public interface CourseService extends IService<Course>{
      * @return 是否是该课程的老师
      */
     public Boolean isCourseTeacher(Long userId, Long courseId);
+
+    /**
+     * 检查用户是否为指定课程的成员
+     * @param userId 待认证的用户
+     * @param courseId 指定的课程id
+     * @return 用户是否在课程中
+     */
+    public Boolean checkCourseEnroll(Long userId, Long courseId);
+
+    /**
+     * 查询指定课程的学生人数
+     * @param courseId 指定的课程id
+     * @return 学生人数
+     */
+    public Long getStudentNum(Long courseId);
 
     /**
      * 向特定课程添加学生

@@ -66,12 +66,12 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     @Override
     @Transactional
     public Long insertProject(ProjectInsertRequest projectInsertRequest) {
-       Project project = new Project();
-       project.setProjectName(projectInsertRequest.getProjectName());
-       project.setCourseId(projectInsertRequest.getCourseId());
-       project.setDescription(projectInsertRequest.getDescription());
-       project.setGroupDeadline(DateTimeFormatTransferUtils.frontDateTime2BackDate(projectInsertRequest.getGroupDeadline()));
-       project.setEndDeadline(DateTimeFormatTransferUtils.frontDateTime2BackDate(projectInsertRequest.getEndDeadline()));
+        Project project = new Project();
+        project.setProjectName(projectInsertRequest.getProjectName());
+        project.setCourseId(projectInsertRequest.getCourseId());
+        project.setDescription(projectInsertRequest.getDescription());
+        project.setGroupDeadline(DateTimeFormatTransferUtils.frontDateTime2BackDate(projectInsertRequest.getGroupDeadline()));
+        project.setEndDeadline(DateTimeFormatTransferUtils.frontDateTime2BackDate(projectInsertRequest.getEndDeadline()));
 
         Boolean isInsert = this.save(project);
         if (!isInsert) throw new BusinessException(StatusCode.PARAMS_ERROR, "项目发布失败");

@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * @className CourseServiceImpl
@@ -207,6 +208,37 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         } else {
             return true;
         }
+    }
+
+    @Override
+    public Boolean checkCourseEnroll(Long userId, Long courseId) {
+        User userInfo = userService.getById(userId);
+        Integer role = userInfo.getUserRole();
+        Boolean enrolled = false;
+        switch (role) {
+            case UserConstant.TEACHER_ASSISTANT_ROLE -> enrolled = teacherAssistantCourseService.isCourseTa(userId, courseId);
+            case UserConstant.TEACHER_ROLE -> enrolled = this.isCourseTeacher(userId, courseId);
+            case UserConstant.STUDENT_ROLE -> {
+                QueryWrapper<UserCourse> userCourseQueryWrapper = new QueryWrapper<>();
+                userCourseQueryWrapper.eq("user_id", userId);
+                userCourseQueryWrapper.and(w -> w.eq("course_id", courseId));
+
+                List<UserCourse> list = userCourseService.list(userCourseQueryWrapper);
+                enrolled = list.isEmpty();
+            }
+            default -> enrolled = true;
+        }
+
+        return enrolled;
+    }
+
+    @Override
+    public Long getStudentNum(Long courseId) {
+        QueryWrapper<UserCourse> userCourseQueryWrapper = new QueryWrapper<>();
+        userCourseQueryWrapper.eq("course_id", courseId);
+        List<UserCourse> student = userCourseService.list(userCourseQueryWrapper);
+        if (student == null) throw new BusinessException(StatusCode.SYSTEM_ERROR, "查询课程信息失败");
+        return (long) student.size();
     }
 
     @Override

@@ -3,27 +3,114 @@ import cn.edu.sustech.ooadbackend.common.BaseResponse;
 import cn.edu.sustech.ooadbackend.common.StatusCode;
 import cn.edu.sustech.ooadbackend.constant.UserConstant;
 import cn.edu.sustech.ooadbackend.exception.BusinessException;
-import cn.edu.sustech.ooadbackend.model.domain.Assignment;
-import cn.edu.sustech.ooadbackend.model.domain.Project;
-import cn.edu.sustech.ooadbackend.model.domain.User;
+import cn.edu.sustech.ooadbackend.model.domain.*;
 import cn.edu.sustech.ooadbackend.model.request.*;
+import cn.edu.sustech.ooadbackend.model.response.GroupsDetailResponse;
+import cn.edu.sustech.ooadbackend.model.response.ProjectInfoResponse;
+import cn.edu.sustech.ooadbackend.service.CourseService;
+import cn.edu.sustech.ooadbackend.service.GroupService;
 import cn.edu.sustech.ooadbackend.service.ProjectService;
-import cn.edu.sustech.ooadbackend.service.UserService;
 import cn.edu.sustech.ooadbackend.utils.ResponseUtils;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.function.Function;
+
 @RestController
 @RequestMapping("/project")
 public class ProjectController {
 
     @Resource
-    private  ProjectService projectService;
+    private ProjectService projectService;
+    @Resource
+    private CourseService courseService;
+
+    @Resource
+    private GroupService groupService;
+
+
+    @PostMapping("/detail/group")
+    public BaseResponse<Long> getCurrentUserGroup(HttpServletRequest request, @RequestParam Long projectId) {
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        QueryWrapper<Group> groupQueryWrapper = new QueryWrapper<>();
+        groupQueryWrapper.eq("project_id", projectId);
+        List<Group> groupsList = groupService.list(groupQueryWrapper);
+    }
+
+
+    @GetMapping("/detail/groups")
+    public BaseResponse<List<GroupsDetailResponse>> getProjectGroupsDetail(HttpServletRequest request, @RequestParam Long projectId) {
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        Project target = projectService.getById(projectId);
+        if (courseService.checkCourseEnroll(currentUser.getId(), target.getCourseId())) {
+            QueryWrapper<Group> groupQueryWrapper = new QueryWrapper<>();
+            groupQueryWrapper.eq("project_id", projectId);
+            List<Group> groupsList = groupService.list(groupQueryWrapper);
+            List<GroupsDetailResponse> list = groupsList.stream().map(new Function<Group, GroupsDetailResponse>() {
+                @Override
+                public GroupsDetailResponse apply(Group group) {
+                    GroupsDetailResponse groupDetail = new GroupsDetailResponse();
+                    groupDetail.setGroupCurrentNumber(groupService.getGroupCurrentNumber(group.getId()));
+                    groupDetail.setGroupMaxNumber(target.getMaxNumber());
+                    groupDetail.setName(group.getGroupName());
+                    groupDetail.setPublicInfo(group.getPublicInfo());
+                    return groupDetail;
+                }
+            }).toList();
+            return ResponseUtils.success(list);
+        } else throw new BusinessException(StatusCode.NO_AUTH, "当前用户无权限查看分组信息");
+    }
+
+    @PostMapping("/detail/update")
+    public BaseResponse<Boolean> updateProjectInfo(HttpServletRequest request, @RequestBody ProjectDetailUpdateRequest updateRequest) {
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        Project target = projectService.getById(updateRequest.getId());
+
+        if ((currentUser.getUserRole() == UserConstant.ADMIN_ROLE || currentUser.getUserRole() == UserConstant.TEACHER_ASSISTANT_ROLE || currentUser.getUserRole() == UserConstant.TEACHER_ROLE) && courseService.checkCourseEnroll(currentUser.getId(), target.getCourseId())) {
+            target.setDescription(updateRequest.getDescription());
+            target.setProjectName(updateRequest.getProjectName());
+            target.setGroupNumber(updateRequest.getGroupNumber());
+            target.setEndDeadline(updateRequest.getEndDeadline());
+            target.setMaxNumber(updateRequest.getMaxNumber());
+            target.setGroupDeadline(updateRequest.getGroupDeadline());
+            boolean b = projectService.updateById(target);
+            if (!b) throw new BusinessException(StatusCode.SYSTEM_ERROR, "修改项目详细信息失败");
+        } else throw new BusinessException(StatusCode.NO_AUTH, "当前用户无权限修改项目信息");
+        return ResponseUtils.success(true);
+    }
+    /**
+     * 获取项目信息
+     * @param projectId 项目id
+     * @param request HttpServletRequest
+     * @return 项目信息
+     */
+    @GetMapping("/")
+    public BaseResponse<ProjectInfoResponse> projectInfo(@RequestParam Long projectId, HttpServletRequest request){
+        //获取用户登录态
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        ProjectInfoResponse response = new ProjectInfoResponse();
+
+        Project target = projectService.getById(projectId);
+        //查询用户是否位于课程范畴内
+            if (courseService.checkCourseEnroll(currentUser.getId(), target.getCourseId())) {
+
+            response.setProjectName(target.getProjectName());
+            response.setDescription(target.getDescription());
+            response.setEndDeadline(target.getEndDeadline());
+            response.setMaxNumber(target.getMaxNumber());
+            response.setGroupDeadline(target.getGroupDeadline());
+            response.setGroupNumber(target.getGroupNumber());
+
+        } else throw new BusinessException(StatusCode.NO_AUTH, "当前用户无权访问该项目信息");
+        return ResponseUtils.success(response);
+    }
+
     /**
      * 获取项目列表
      * @param courseId
