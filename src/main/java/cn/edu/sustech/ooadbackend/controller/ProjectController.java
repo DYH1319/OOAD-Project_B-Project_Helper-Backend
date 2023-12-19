@@ -10,6 +10,7 @@ import cn.edu.sustech.ooadbackend.model.response.ProjectInfoResponse;
 import cn.edu.sustech.ooadbackend.service.CourseService;
 import cn.edu.sustech.ooadbackend.service.GroupService;
 import cn.edu.sustech.ooadbackend.service.ProjectService;
+import cn.edu.sustech.ooadbackend.service.UserGroupService;
 import cn.edu.sustech.ooadbackend.utils.ResponseUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import jakarta.annotation.Resource;
@@ -18,27 +19,96 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 @RestController
 @RequestMapping("/project")
 public class ProjectController {
-
+    @Resource
+    private UserGroupService userGroupService;
     @Resource
     private ProjectService projectService;
     @Resource
     private CourseService courseService;
-
     @Resource
     private GroupService groupService;
 
+    @PostMapping("/group/leave")
+    public BaseResponse<Boolean> leaveProjectGroup(HttpServletRequest request, @RequestBody GroupUserRequest groupRequest) {
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        Group targetGroup = groupService.getById(groupRequest.getGroupId());
+        QueryWrapper<UserGroup> userGroupQueryWrapper = new QueryWrapper<>();
+        userGroupQueryWrapper.eq("user_id", currentUser.getId());
+        userGroupQueryWrapper.and(w->w.eq("group_id", targetGroup.getId()));
+        boolean remove = userGroupService.remove(userGroupQueryWrapper);
+        if (!remove) throw new BusinessException(StatusCode.PARAMS_ERROR, "参数错误，用户可能不在该小组中");
+        if (Objects.equals(targetGroup.getGroupLeader(), currentUser.getId())) {
+            if (groupService.getGroupCurrentNumber(groupRequest.getGroupId()) == 0) {
+                targetGroup.setGroupLeader(null);
+            } else {
+                userGroupQueryWrapper = new QueryWrapper<>();
+                userGroupQueryWrapper.eq("group_id", targetGroup.getId());
+                UserGroup nextUser = userGroupService.getOne(userGroupQueryWrapper);
+                targetGroup.setGroupLeader(nextUser.getUserId());
+            }
+            groupService.updateById(targetGroup);
+        }
+        return ResponseUtils.success(true);
+    }
 
-    @PostMapping("/detail/group")
+    @PostMapping("/group/join")
+    public BaseResponse<Boolean> joinProjectGroup(HttpServletRequest request, @RequestBody GroupUserRequest groupRequest) {
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        Group targetGroup = groupService.getById(groupRequest.getGroupId());
+        Project target = projectService.getById(targetGroup.getProjectId());
+
+        QueryWrapper<Group> groupQueryWrapper = new QueryWrapper<>();
+        groupQueryWrapper.eq("project_id", target.getId());
+        List<Group> groupList = groupService.list(groupQueryWrapper);
+
+        for (Group group : groupList) {
+            QueryWrapper<UserGroup> userGroupQueryWrapper = new QueryWrapper<>();
+            userGroupQueryWrapper.eq("user_id", currentUser.getId());
+            userGroupQueryWrapper.and( w -> w.eq("group_id", group.getId()));
+            long count = userGroupService.count(userGroupQueryWrapper);
+            if (count > 0) {
+                throw new BusinessException(StatusCode.PARAMS_ERROR, "当前用户已经加入了该项目的另一小组");
+            }
+        }
+
+        if (courseService.checkCourseEnroll(currentUser.getId(), target.getCourseId())) {
+            Integer currentGroupNumber = groupService.getGroupCurrentNumber(targetGroup.getId());
+            if (currentGroupNumber == 0) {
+                targetGroup.setGroupLeader(currentUser.getId());
+            }
+            boolean b = groupService.updateById(targetGroup);
+            if (!b) throw new BusinessException(StatusCode.SYSTEM_ERROR, "修改组长角色失败,系统异常");
+            UserGroup newMember = new UserGroup();
+            newMember.setGroupId(groupRequest.getGroupId());
+            newMember.setUserId(currentUser.getId());
+            boolean save = userGroupService.save(newMember);
+            if (!save) throw new BusinessException(StatusCode.PARAMS_ERROR, "保存用户小组信息失败");
+        } else throw new BusinessException(StatusCode.NO_AUTH, "当前用户无权限加入该项目的小组");
+        return ResponseUtils.success(true);
+    }
+
+    @GetMapping("/detail/group")
     public BaseResponse<Long> getCurrentUserGroup(HttpServletRequest request, @RequestParam Long projectId) {
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
         QueryWrapper<Group> groupQueryWrapper = new QueryWrapper<>();
         groupQueryWrapper.eq("project_id", projectId);
         List<Group> groupsList = groupService.list(groupQueryWrapper);
+        for (Group group : groupsList) {
+            QueryWrapper<UserGroup> userGroupQueryWrapper = new QueryWrapper<>();
+            userGroupQueryWrapper.eq("user_id", currentUser.getId());
+            userGroupQueryWrapper.and( w -> w.eq("group_id", group.getId()));
+            long count = userGroupService.count(userGroupQueryWrapper);
+            if (count == 1) {
+                return ResponseUtils.success(group.getId());
+            }
+        }
+        throw new BusinessException(StatusCode.PARAMS_ERROR, "当前用户无组队信息");
     }
 
 
