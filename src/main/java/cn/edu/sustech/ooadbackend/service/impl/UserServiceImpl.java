@@ -1,6 +1,7 @@
 package cn.edu.sustech.ooadbackend.service.impl;
 
 import cn.edu.sustech.ooadbackend.common.StatusCode;
+import cn.edu.sustech.ooadbackend.common.FileType;
 import cn.edu.sustech.ooadbackend.constant.UserConstant;
 import cn.edu.sustech.ooadbackend.exception.BusinessException;
 import cn.edu.sustech.ooadbackend.mapper.UserMapper;
@@ -9,11 +10,13 @@ import cn.edu.sustech.ooadbackend.model.request.CurrentUserUpdateRequest;
 import cn.edu.sustech.ooadbackend.model.request.UserInsertRequest;
 import cn.edu.sustech.ooadbackend.model.request.UserUpdateRequest;
 import cn.edu.sustech.ooadbackend.service.UserService;
+import cn.edu.sustech.ooadbackend.utils.CosManager;
 import cn.edu.sustech.ooadbackend.utils.DateTimeFormatTransferUtils;
 import cn.edu.sustech.ooadbackend.utils.RedisClient;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,12 +25,15 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -50,6 +56,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     
     @Autowired
     private RedisClient redisClient;
+    
+    @Resource
+    private CosManager cosManager;
     
     @Override
     public long userRegister(String userAccount, String username, String userPassword, String checkPassword) {
@@ -184,8 +193,46 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         long userId = currentUser.getId();
         User user = this.getById(userId);
         User safetyUser = this.getSafetyUser(user);
+        if (!isUrl(safetyUser.getAvatarUrl())) {
+            safetyUser.setAvatarUrl(cosManager.getObjectPresignedUrl(safetyUser.getAvatarUrl(), FileType.AVATAR_IMAGE));
+        }
         request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, safetyUser);
         return safetyUser;
+    }
+    
+    @Override
+    public String avatarUpload(MultipartFile file, HttpServletRequest request) {
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        if (currentUser == null) {
+            throw new BusinessException(StatusCode.NOT_LOGIN, "未登录，请先登录");
+        }
+        
+        // 上传至对象存储桶
+        // noinspection StringBufferReplaceableByString
+        String key = new StringBuilder()
+            .append(new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date()))
+            .append('-')
+            .append(UUID.randomUUID())
+            .append('-')
+            .append(file.getOriginalFilename())
+            .toString();
+        try {
+            cosManager.putObject(key, file.getInputStream(), file.getSize(), FileType.AVATAR_IMAGE);
+        } catch (IOException e) {
+            throw new BusinessException(StatusCode.SYSTEM_ERROR, "上传失败");
+        }
+        
+        // 数据库存储键
+        User user = new User();
+        user.setId(currentUser.getId());
+        user.setAvatarUrl(key);
+        int count = userMapper.updateById(user);
+        
+        if (count != 1) {
+            throw new BusinessException(StatusCode.SYSTEM_ERROR, "数据库异常，请联系管理员");
+        }
+        
+        return cosManager.getObjectPresignedUrl(key, FileType.AVATAR_IMAGE);
     }
     
     private User getSafetyUser(User originUser) {
@@ -216,6 +263,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     
     private String md5EncryptPassword(String originPassword) {
         return DigestUtils.md5DigestAsHex((UserConstant.SALT + originPassword).getBytes(StandardCharsets.UTF_8));
+    }
+    
+    private boolean isUrl(String text) {
+        return text.toLowerCase().startsWith("http") || text.toLowerCase().startsWith("https");
     }
 
     @Override
@@ -302,6 +353,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             lambdaQueryWrapper.le(User::getCreateTime, endTime);
         }
         List<User> userList = userMapper.selectList(lambdaQueryWrapper);
+        userList.stream().filter(user -> !isUrl(user.getAvatarUrl())).forEach(user -> {
+            user.setAvatarUrl(cosManager.getObjectPresignedUrl(user.getAvatarUrl(), FileType.AVATAR_IMAGE));
+        });
         return userList.stream().map(this::getSafetyUser).collect(Collectors.toList());
     }
 

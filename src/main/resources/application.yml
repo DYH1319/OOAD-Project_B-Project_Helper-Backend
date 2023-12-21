@@ -11,6 +11,11 @@ spring:
   # session (单位：秒)
   session:
     timeout: 600
+#    store-type: redis
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
   mail:
     host: smtp.qq.com
     port: 465
@@ -43,3 +48,10 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
       logic-delete-field: is_deleted
+# 对象存储
+cos:
+  client:
+    accessKey: AKIDypTt4LWVHrEOL7g2BAxYw88wXv76sfHh
+    secretKey: NYXTEm7FBvSnvqaBbprgIhuvmRvCH8nG
+    region: ap-guangzhou
+    bucket: ooad-project-helper-1316795670

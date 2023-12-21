@@ -6,6 +6,7 @@ import cn.edu.sustech.ooadbackend.model.request.UserInsertRequest;
 import cn.edu.sustech.ooadbackend.model.request.UserUpdateRequest;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Date;
 import java.util.List;
@@ -65,6 +66,14 @@ public interface UserService extends IService<User> {
      * @return 当前登录的用户
      */
     User getCurrentUser(HttpServletRequest request);
+    
+    /**
+     * 用户上传头像
+     * @param file 头像文件
+     * @param request HttpServletRequest
+     * @return 带有过期时间的预签名访问链接
+     */
+    String avatarUpload(MultipartFile file, HttpServletRequest request);
 
     /**
      * 更新当前用户个人信息

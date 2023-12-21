@@ -11,10 +11,10 @@ import cn.edu.sustech.ooadbackend.utils.ResponseUtils;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Date;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -102,6 +102,15 @@ public class UserController {
         }
         User safetyUser = userService.getCurrentUser(request);
         return ResponseUtils.success(safetyUser);
+    }
+    
+    @PostMapping("/avatar/upload")
+    public BaseResponse<String> avatarUpload(@RequestParam MultipartFile file, HttpServletRequest request) throws IOException {
+        if (request == null) {
+            throw new BusinessException(StatusCode.PARAMS_ERROR);
+        }
+        String presignedUrl = userService.avatarUpload(file, request);
+        return ResponseUtils.success(presignedUrl, "成功上传文件");
     }
 
     @PostMapping("/current/update")

@@ -8,10 +8,7 @@ import org.springframework.stereotype.Component;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author DYH
- * @version 1.0
- * @className RedisClient
- * @since 2023/11/30 19:35
+ * Redis 操作
  */
 @Component
 public class RedisClient {
@@ -52,6 +49,13 @@ public class RedisClient {
         } else {
             return null;
         }
+    }
+    
+    /**
+     * 判断缓存是否存在
+     */
+    public boolean hasKey(String key) {
+        return Boolean.TRUE.equals(redisTemplate.hasKey(key));
     }
     
     /**
