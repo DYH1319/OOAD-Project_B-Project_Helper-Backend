@@ -32,7 +32,7 @@ spring:
       host: dyh1319.asia
       port: 6379
       database: 0
-      password: redis
+      password: SSp06JbOA47PAsI
 server:
   port: 8080
   servlet:
