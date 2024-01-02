@@ -114,7 +114,7 @@ public class UserController {
             throw new BusinessException(StatusCode.PARAMS_ERROR);
         }
         String presignedUrl = userService.avatarUpload(file, request);
-        return ResponseUtils.success(presignedUrl, "成功上传文件");
+        return ResponseUtils.success(presignedUrl, "成功上传头像");
     }
     
     @PostMapping("/current/update")
