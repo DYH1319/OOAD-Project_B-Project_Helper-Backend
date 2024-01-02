@@ -5,12 +5,10 @@ import cn.edu.sustech.ooadbackend.constant.UserConstant;
 import cn.edu.sustech.ooadbackend.exception.BusinessException;
 import cn.edu.sustech.ooadbackend.model.domain.*;
 import cn.edu.sustech.ooadbackend.model.request.*;
+import cn.edu.sustech.ooadbackend.model.response.GroupInfoResponse;
 import cn.edu.sustech.ooadbackend.model.response.GroupsDetailResponse;
 import cn.edu.sustech.ooadbackend.model.response.ProjectInfoResponse;
-import cn.edu.sustech.ooadbackend.service.CourseService;
-import cn.edu.sustech.ooadbackend.service.GroupService;
-import cn.edu.sustech.ooadbackend.service.ProjectService;
-import cn.edu.sustech.ooadbackend.service.UserGroupService;
+import cn.edu.sustech.ooadbackend.service.*;
 import cn.edu.sustech.ooadbackend.utils.ResponseUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import jakarta.annotation.Resource;
@@ -33,6 +31,10 @@ public class ProjectController {
     private CourseService courseService;
     @Resource
     private GroupService groupService;
+    @Resource
+    private NotificationService notificationService;
+    @Resource
+    private TeacherAssistantCourseService teacherAssistantCourseService;
 
     @PostMapping("/group/leave")
     public BaseResponse<Boolean> leaveProjectGroup(HttpServletRequest request, @RequestBody GroupUserRequest groupRequest) {
@@ -266,7 +268,108 @@ public class ProjectController {
         Boolean deleted = projectService.deleteProject(id);
         return ResponseUtils.success(deleted, "成功删除项目信息");
     }
+    /**
+     *
+     * @param request
+     * @param projectId
+     * @return
+     */
+    @GetMapping("/notification/list")
+    public BaseResponse<Notification[]> listNotification (HttpServletRequest request, @RequestParam Long projectId){
+        if (request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE) == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+        return ResponseUtils.success(projectService.listNotification(request, projectId));
+    }
+    @PostMapping("/notification/delete")
+    public BaseResponse<Boolean> deleteNotification(HttpServletRequest request, @RequestBody NotificationDeleteRequest notificationDeleteRequest){
 
+        // 检查用户态以及用户权限
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+
+        QueryWrapper<Notification> notificationQueryWrapper = new QueryWrapper<>();
+
+        notificationQueryWrapper.eq("id", notificationDeleteRequest.getNotificationId());
+
+        Notification notification = notificationService.getOne(notificationQueryWrapper);
+
+        if (notification == null) throw new BusinessException(StatusCode.SYSTEM_ERROR, "删除通知的时候发生异常");
+
+        if (!(currentUser.getUserRole() == UserConstant.ADMIN_ROLE || (currentUser.getUserRole() == UserConstant.TEACHER_ROLE && courseService.isCourseTeacher(currentUser.getId(), notification.getCourseId())) || (currentUser.getUserRole() == UserConstant.TEACHER_ASSISTANT_ROLE && teacherAssistantCourseService.isCourseTa(currentUser.getId(), notification.getCourseId())))) throw new BusinessException(StatusCode.NO_AUTH, "您无权向该项目删除通知");
+
+        return ResponseUtils.success(projectService.removeNotification(notificationDeleteRequest.getNotificationId()));
+    }
+
+    @PostMapping("/notification/insert")
+    public BaseResponse<Long> insertNotification(HttpServletRequest request, @RequestBody NotificationInsertRequest notificationInsertRequest){
+
+        // 检查用户态以及用户权限
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+
+        if (!(currentUser.getUserRole() == UserConstant.ADMIN_ROLE || (currentUser.getUserRole() == UserConstant.TEACHER_ROLE && courseService.isCourseTeacher(currentUser.getId(), notificationInsertRequest.getCourseId())) || (currentUser.getUserRole() == UserConstant.TEACHER_ASSISTANT_ROLE && teacherAssistantCourseService.isCourseTa(currentUser.getId(), notificationInsertRequest.getCourseId())))) throw new BusinessException(StatusCode.NO_AUTH, "您无权向该项目插入通知");
+
+        return ResponseUtils.success(projectService.insertNotification(currentUser.getId(), notificationInsertRequest));
+    }
+
+
+    @GetMapping("/group")
+    public BaseResponse<GroupInfoResponse> groupInfo (HttpServletRequest request, @RequestParam Long groupId){
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+        GroupInfoResponse response = new GroupInfoResponse();
+        Group target = groupService.getById(groupId);
+
+        Long projectId = target.getProjectId();
+        QueryWrapper<Project> projectQueryWrapper = new QueryWrapper<>();
+        projectQueryWrapper.eq("id",projectId);
+        Long courseId = projectService.getOne(projectQueryWrapper).getCourseId();
+
+        //查询用户是否有权限
+        if (courseService.checkCourseEnroll(currentUser.getId(), courseId)) {
+            response.setGroupName(target.getGroupName());
+            response.setGroupLeader(target.getGroupLeader());
+            response.setDefenceTeacher(target.getDefenceTeacher());
+            response.setPresentationTime(target.getPresentationTime());
+            response.setPublicInfo(target.getPublicInfo());
+
+        } else throw new BusinessException(StatusCode.NO_AUTH, "当前用户无权访问该小组信息");
+        return ResponseUtils.success(response);
+    }
+    @PostMapping("/group/detail/update")
+    public BaseResponse<Boolean> groupDetailUpdate(HttpServletRequest request,  @RequestBody GroupDetailUpdateRequest updateRequest){
+
+        // 检查用户态以及用户权限
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+
+        Group target = groupService.getById(updateRequest.getId());
+        Long projectId = target.getProjectId();
+        QueryWrapper<Project> projectQueryWrapper = new QueryWrapper<>();
+        projectQueryWrapper.eq("id",projectId);
+        Long courseId = projectService.getOne(projectQueryWrapper).getCourseId();
+
+        if ((currentUser.getUserRole() == UserConstant.ADMIN_ROLE || currentUser.getUserRole() == UserConstant.TEACHER_ASSISTANT_ROLE || currentUser.getUserRole() == UserConstant.TEACHER_ROLE) && courseService.checkCourseEnroll(currentUser.getId(), courseId)) {
+            target.setId(updateRequest.getId());
+            target.setGroupName(updateRequest.getGroupName());
+            target.setGroupLeader(updateRequest.getGroupLeader());
+            target.setDefenceTeacher(updateRequest.getDefenceTeacher());
+            target.setPresentationTime(updateRequest.getPresentationTime());
+            target.setPublicInfo(updateRequest.getPublicInfo());
+            boolean b = groupService.updateById(target);
+            if (!b) throw new BusinessException(StatusCode.SYSTEM_ERROR, "修改小组详细信息失败");
+        }else if (Objects.equals(currentUser.getId(), updateRequest.getGroupLeader()) && currentUser.getUserRole() == UserConstant.STUDENT_ROLE){
+            target.setGroupName(updateRequest.getGroupName());
+            target.setPublicInfo(updateRequest.getPublicInfo());
+            boolean b = groupService.updateById(target);
+            if (!b) throw new BusinessException(StatusCode.SYSTEM_ERROR, "修改小组名和对外展示信息失败");
+        } else throw new BusinessException(StatusCode.NO_AUTH, "当前用户无权限修改项目信息");
+        return ResponseUtils.success(true);
+
+    }
 
 
 }

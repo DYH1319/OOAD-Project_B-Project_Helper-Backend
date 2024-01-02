@@ -3,12 +3,11 @@ import cn.edu.sustech.ooadbackend.common.BaseResponse;
 import cn.edu.sustech.ooadbackend.common.StatusCode;
 import cn.edu.sustech.ooadbackend.constant.UserConstant;
 import cn.edu.sustech.ooadbackend.exception.BusinessException;
-import cn.edu.sustech.ooadbackend.model.domain.Assignment;
-import cn.edu.sustech.ooadbackend.model.domain.Course;
-import cn.edu.sustech.ooadbackend.model.domain.Notification;
-import cn.edu.sustech.ooadbackend.model.domain.User;
+import cn.edu.sustech.ooadbackend.model.domain.*;
 import cn.edu.sustech.ooadbackend.model.request.*;
+import cn.edu.sustech.ooadbackend.model.response.AssignmentInfoResponse;
 import cn.edu.sustech.ooadbackend.model.response.CourseInfoResponse;
+import cn.edu.sustech.ooadbackend.model.response.GroupInfoResponse;
 import cn.edu.sustech.ooadbackend.service.AssignmentService;
 import cn.edu.sustech.ooadbackend.service.CourseService;
 import cn.edu.sustech.ooadbackend.service.NotificationService;
@@ -21,6 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
+
 /**
  * @className: AssignmentController
  * @Package: cn.edu.sustech.ooadbackend.controller
@@ -31,6 +32,8 @@ import java.util.List;
 public class AssignmentController {
     @Resource
     private AssignmentService assignmentService;
+    @Resource
+    private CourseService courseService;
 
     /**
      * 获取作业列表
@@ -124,6 +127,51 @@ public class AssignmentController {
 
         Boolean deleted = assignmentService.deleteAssignment(id);
         return ResponseUtils.success(deleted, "成功删除作业信息");
+    }
+    @GetMapping("/")
+    public BaseResponse<AssignmentInfoResponse> groupInfo (HttpServletRequest request, @RequestParam Long assignmentId){
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+        AssignmentInfoResponse response = new AssignmentInfoResponse();
+        Assignment target = assignmentService.getById(assignmentId);
+        Long courseId = target.getCourseId();
+
+        //查询用户是否有权限
+        if (courseService.checkCourseEnroll(currentUser.getId(), courseId)) {
+            response.setTitle(target.getTitle());
+            response.setDescription(target.getDescription());
+            response.setStartTime(target.getStartTime());
+            response.setEndTime(target.getEndTime());
+            response.setAssignmentType(target.getAssignmentType());
+
+        } else throw new BusinessException(StatusCode.NO_AUTH, "当前用户无权访问该作业信息");
+        return ResponseUtils.success(response);
+    }
+    @PostMapping("/detail/update")
+    public BaseResponse<Boolean> assignmentDetailUpdate(HttpServletRequest request,  @RequestBody AssignmentDetailUpdateRequest updateRequest){
+
+        // 检查用户态以及用户权限
+        User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+
+        if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
+
+        Assignment target = assignmentService.getById(updateRequest.getId());
+
+        Long courseId = target.getCourseId();
+
+        if ((currentUser.getUserRole() == UserConstant.ADMIN_ROLE || currentUser.getUserRole() == UserConstant.TEACHER_ASSISTANT_ROLE || currentUser.getUserRole() == UserConstant.TEACHER_ROLE ) && courseService.checkCourseEnroll(currentUser.getId(), courseId)) {
+            target.setId(updateRequest.getId());
+            target.setTitle(updateRequest.getTitle());
+            target.setDescription(updateRequest.getDescription());
+            target.setStartTime(updateRequest.getStartTime());
+            target.setEndTime(updateRequest.getEndTime());
+            target.setAssignmentType(updateRequest.getAssignmentType());
+            boolean b = assignmentService.updateById(target);
+            if (!b) throw new BusinessException(StatusCode.SYSTEM_ERROR, "修改作业详细信息失败");
+        } else throw new BusinessException(StatusCode.NO_AUTH, "当前用户无权限修改作业信息");
+        return ResponseUtils.success(true);
+
     }
 
 
