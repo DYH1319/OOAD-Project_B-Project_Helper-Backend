@@ -68,7 +68,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
             QueryWrapper<Project> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("course_id",courseId);
             List<Project> thisCourseProject = this.list(queryWrapper);
-            if (thisCourseProject == null || thisCourseProject.isEmpty()) throw new BusinessException(StatusCode.NULL_ERROR, "查找不到用户的课程信息");
+            // if (thisCourseProject == null || thisCourseProject.isEmpty()) throw new BusinessException(StatusCode.NULL_ERROR, "查找不到用户的课程信息");
             return thisCourseProject.stream().map(this::getSafetyProject).toList();
 
         }

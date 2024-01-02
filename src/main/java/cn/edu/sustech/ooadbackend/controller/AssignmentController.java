@@ -128,7 +128,7 @@ public class AssignmentController {
         Boolean deleted = assignmentService.deleteAssignment(id);
         return ResponseUtils.success(deleted, "成功删除作业信息");
     }
-    @GetMapping("/")
+    @GetMapping("")
     public BaseResponse<AssignmentInfoResponse> groupInfo (HttpServletRequest request, @RequestParam Long assignmentId){
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
 

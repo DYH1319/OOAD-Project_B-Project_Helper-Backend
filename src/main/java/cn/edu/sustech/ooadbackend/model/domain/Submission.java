@@ -48,6 +48,12 @@ public class Submission {
     private String content;
     
     /**
+     * 提交类型
+     */
+    @TableField(value = "content_type")
+    private String contentType;
+    
+    /**
      * 提交时间，非空
      */
     @TableField(value = "submit_time")
