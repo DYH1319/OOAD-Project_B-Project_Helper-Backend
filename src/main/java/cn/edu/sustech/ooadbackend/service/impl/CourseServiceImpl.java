@@ -224,7 +224,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
                 userCourseQueryWrapper.and(w -> w.eq("course_id", courseId));
 
                 List<UserCourse> list = userCourseService.list(userCourseQueryWrapper);
-                enrolled = list.isEmpty();
+                enrolled = !list.isEmpty();
             }
             default -> enrolled = true;
         }

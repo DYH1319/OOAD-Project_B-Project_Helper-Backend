@@ -124,9 +124,7 @@ public class AssignmentServiceImpl extends ServiceImpl<AssignmentMapper, Assignm
         }
         
         String fileType;
-        if (originFileName.toLowerCase().endsWith(".txt")) {
-            fileType = "TXT";
-        } else if (originFileName.toLowerCase().endsWith(".pdf")) {
+        if (originFileName.toLowerCase().endsWith(".pdf")) {
             fileType = "PDF";
         } else if (originFileName.toLowerCase().endsWith(".md")) {
             fileType = "MD";
