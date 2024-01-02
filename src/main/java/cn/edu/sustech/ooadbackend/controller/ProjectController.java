@@ -36,7 +36,7 @@ public class ProjectController {
     @Resource
     private TeacherAssistantCourseService teacherAssistantCourseService;
 
-    @GetMapping("/detail/group")
+    @GetMapping("/group")
     public BaseResponse<Long> getCurrentUserGroup(HttpServletRequest request, @RequestParam Long projectId) {
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
         QueryWrapper<Group> groupQueryWrapper = new QueryWrapper<>();
@@ -55,7 +55,7 @@ public class ProjectController {
     }
 
 
-    @GetMapping("/detail/groups")
+    @GetMapping("/groups")
     public BaseResponse<List<GroupsDetailResponse>> getProjectGroupsDetail(HttpServletRequest request, @RequestParam Long projectId) {
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
         Project target = projectService.getById(projectId);
@@ -102,7 +102,7 @@ public class ProjectController {
      * @param request HttpServletRequest
      * @return 项目信息
      */
-    @GetMapping("/")
+    @GetMapping("")
     public BaseResponse<ProjectInfoResponse> projectInfo(@RequestParam Long projectId, HttpServletRequest request){
         //获取用户登录态
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);

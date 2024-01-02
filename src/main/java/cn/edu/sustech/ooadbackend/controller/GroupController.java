@@ -99,7 +99,7 @@ public class GroupController {
         return ResponseUtils.success(true);
     }
     
-    @GetMapping("/")
+    @GetMapping("")
     public BaseResponse<GroupInfoResponse> groupInfo (HttpServletRequest request, @RequestParam Long groupId){
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
         
