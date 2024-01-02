@@ -51,7 +51,7 @@ public class AssignmentServiceImpl extends ServiceImpl<AssignmentMapper, Assignm
         queryWrapper.eq("course_id", courseId);
         assignmentList = this.list(queryWrapper);
         if (assignmentList == null || assignmentList.isEmpty())
-            throw new BusinessException(StatusCode.NULL_ERROR, "查找不到该课程的作业信息");
+            return assignmentList;
         
         return assignmentList.stream().map(this::getSafeAssignment).toList();
     }
