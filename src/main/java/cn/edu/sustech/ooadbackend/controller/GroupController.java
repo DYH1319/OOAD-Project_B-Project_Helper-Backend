@@ -40,7 +40,7 @@ public class GroupController {
     @Resource
     private GroupService groupService;
     
-    @PostMapping("/group/leave")
+    @PostMapping("/leave")
     public BaseResponse<Boolean> leaveProjectGroup(HttpServletRequest request, @RequestBody GroupUserRequest groupRequest) {
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
         Group targetGroup = groupService.getById(groupRequest.getGroupId());
@@ -63,7 +63,7 @@ public class GroupController {
         return ResponseUtils.success(true);
     }
     
-    @PostMapping("/group/join")
+    @PostMapping("/join")
     public BaseResponse<Boolean> joinProjectGroup(HttpServletRequest request, @RequestBody GroupUserRequest groupRequest) {
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
         Group targetGroup = groupService.getById(groupRequest.getGroupId());
@@ -99,7 +99,7 @@ public class GroupController {
         return ResponseUtils.success(true);
     }
     
-    @GetMapping("/group")
+    @GetMapping("/")
     public BaseResponse<GroupInfoResponse> groupInfo (HttpServletRequest request, @RequestParam Long groupId){
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
         
@@ -124,7 +124,7 @@ public class GroupController {
         return ResponseUtils.success(response);
     }
     
-    @PostMapping("/group/detail/update")
+    @PostMapping("/detail/update")
     public BaseResponse<Boolean> groupDetailUpdate(HttpServletRequest request,  @RequestBody GroupDetailUpdateRequest updateRequest){
         
         // 检查用户态以及用户权限
