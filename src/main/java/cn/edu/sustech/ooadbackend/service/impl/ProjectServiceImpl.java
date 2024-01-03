@@ -213,7 +213,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         newNotification.setTitle(notificationRequest.getTitle());
         newNotification.setMessage(notificationRequest.getMessage());
         newNotification.setSenderId(senderId);
-        newNotification.setCourseId(notificationRequest.getCourseId());
+        newNotification.setProjectId(notificationRequest.getCourseId());
         
         boolean saved = notificationService.save(newNotification);
         

@@ -65,6 +65,7 @@ public class ProjectController {
             List<Group> groupsList = groupService.list(groupQueryWrapper);
             List<GroupsDetailResponse> list = groupsList.stream().map(group -> {
                 GroupsDetailResponse groupDetail = new GroupsDetailResponse();
+                groupDetail.setGroupId(group.getId());
                 groupDetail.setGroupCurrentNumber(groupService.getGroupCurrentNumber(group.getId()));
                 groupDetail.setGroupMaxNumber(target.getMaxNumber());
                 groupDetail.setName(group.getGroupName());
@@ -81,12 +82,13 @@ public class ProjectController {
 
         Project target = projectService.getById(updateRequest.getProjectId());
 
-        int newCreatedGroup = updateRequest.getMaxNumber() - target.getMaxNumber();
+        int newCreatedGroup = updateRequest.getGroupNumber() - target.getGroupNumber();
 
         if (newCreatedGroup > 0) {
             for (int i = 0; i < newCreatedGroup; i++) {
                 Group group = new Group();
-                group.setGroupName("Group-" + (target.getMaxNumber() + i));
+                group.setGroupName("Group-" + (target.getGroupNumber() + i + 1));
+                group.setProjectId(target.getId());
                 groupService.save(group);
             }
         }

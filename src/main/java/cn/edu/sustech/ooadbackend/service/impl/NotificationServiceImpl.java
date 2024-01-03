@@ -151,6 +151,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
         simplifiedNotification.setId(notification.getId());
         simplifiedNotification.setTitle(notification.getTitle());
+        simplifiedNotification.setMessage(notification.getMessage());
 
         return simplifiedNotification;
     }

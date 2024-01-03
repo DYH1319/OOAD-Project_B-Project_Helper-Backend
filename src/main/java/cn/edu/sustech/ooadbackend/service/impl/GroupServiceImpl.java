@@ -26,7 +26,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
     public Integer getGroupCurrentNumber(Long groupId) {
         QueryWrapper<UserGroup> userGroupQueryWrapper = new QueryWrapper<>();
         userGroupQueryWrapper.eq("group_id", groupId);
-        long count = userGroupService.count();
+        long count = userGroupService.count(userGroupQueryWrapper);
         return (int) count;
     }
 }
