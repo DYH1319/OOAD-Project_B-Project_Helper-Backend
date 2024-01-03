@@ -79,7 +79,17 @@ public class ProjectController {
     public BaseResponse<Boolean> updateProjectInfo(HttpServletRequest request, @RequestBody ProjectDetailUpdateRequest updateRequest) {
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
 
-        Project target = projectService.getById(updateRequest.getId());
+        Project target = projectService.getById(updateRequest.getProjectId());
+
+        int newCreatedGroup = updateRequest.getMaxNumber() - target.getMaxNumber();
+
+        if (newCreatedGroup > 0) {
+            for (int i = 0; i < newCreatedGroup; i++) {
+                Group group = new Group();
+                group.setGroupName("Group-" + (target.getMaxNumber() + i));
+                groupService.save(group);
+            }
+        }
 
         if ((currentUser.getUserRole() == UserConstant.ADMIN_ROLE || currentUser.getUserRole() == UserConstant.TEACHER_ASSISTANT_ROLE || currentUser.getUserRole() == UserConstant.TEACHER_ROLE) && courseService.checkCourseEnroll(currentUser.getId(), target.getCourseId())) {
             target.setDescription(updateRequest.getDescription());
