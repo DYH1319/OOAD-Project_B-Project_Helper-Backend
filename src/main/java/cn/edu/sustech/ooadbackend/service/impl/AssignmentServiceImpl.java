@@ -128,8 +128,6 @@ public class AssignmentServiceImpl extends ServiceImpl<AssignmentMapper, Assignm
             fileType = "PDF";
         } else if (originFileName.toLowerCase().endsWith(".md")) {
             fileType = "MD";
-        } else if (originFileName.toLowerCase().endsWith(".docx")) {
-            fileType = "DOCX";
         } else {
             throw new BusinessException(StatusCode.PARAMS_ERROR, "文件类型不符合");
         }

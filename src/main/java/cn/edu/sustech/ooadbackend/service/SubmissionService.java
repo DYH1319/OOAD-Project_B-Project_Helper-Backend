@@ -1,8 +1,11 @@
 package cn.edu.sustech.ooadbackend.service;
 
 import cn.edu.sustech.ooadbackend.model.domain.Submission;
+import cn.edu.sustech.ooadbackend.model.response.ReviewListResponse;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletRequest;
+
+import java.util.List;
 
 /**
  * @className SubmissionService
@@ -20,4 +23,6 @@ public interface SubmissionService extends IService<Submission> {
      * @return 提交的详细信息
      */
     Submission getSubmissionById(Long submissionId, HttpServletRequest request);
+    
+    List<ReviewListResponse> reviewListByAssignmentId(Long assignmentId, HttpServletRequest request);
 }

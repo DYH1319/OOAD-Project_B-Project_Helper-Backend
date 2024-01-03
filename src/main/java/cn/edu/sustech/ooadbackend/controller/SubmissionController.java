@@ -4,14 +4,14 @@ import cn.edu.sustech.ooadbackend.common.BaseResponse;
 import cn.edu.sustech.ooadbackend.common.StatusCode;
 import cn.edu.sustech.ooadbackend.exception.BusinessException;
 import cn.edu.sustech.ooadbackend.model.domain.Submission;
+import cn.edu.sustech.ooadbackend.model.response.ReviewListResponse;
 import cn.edu.sustech.ooadbackend.service.SubmissionService;
 import cn.edu.sustech.ooadbackend.utils.ResponseUtils;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * @author DYH
@@ -32,6 +32,15 @@ public class SubmissionController {
             throw new BusinessException(StatusCode.PARAMS_ERROR);
         }
         Submission result = submissionService.getSubmissionById(submissionId, request);
+        return ResponseUtils.success(result);
+    }
+    
+    @GetMapping("/review/list")
+    public BaseResponse<List<ReviewListResponse>> reviewListByAssignmentId(@RequestParam Long assignmentId, HttpServletRequest request) {
+        if (assignmentId == null || assignmentId <= 0) {
+            throw new BusinessException(StatusCode.PARAMS_ERROR);
+        }
+        List<ReviewListResponse> result = submissionService.reviewListByAssignmentId(assignmentId, request);
         return ResponseUtils.success(result);
     }
 }

@@ -5,8 +5,10 @@ import cn.edu.sustech.ooadbackend.common.StatusCode;
 import cn.edu.sustech.ooadbackend.constant.UserConstant;
 import cn.edu.sustech.ooadbackend.exception.BusinessException;
 import cn.edu.sustech.ooadbackend.mapper.SubmissionMapper;
+import cn.edu.sustech.ooadbackend.mapper.UserMapper;
 import cn.edu.sustech.ooadbackend.model.domain.Submission;
 import cn.edu.sustech.ooadbackend.model.domain.User;
+import cn.edu.sustech.ooadbackend.model.response.ReviewListResponse;
 import cn.edu.sustech.ooadbackend.service.SubmissionService;
 import cn.edu.sustech.ooadbackend.utils.CosManager;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -14,6 +16,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @className SubmissionServiceImpl
@@ -27,6 +32,9 @@ public class SubmissionServiceImpl extends ServiceImpl<SubmissionMapper, Submiss
     
     @Resource
     private SubmissionMapper submissionMapper;
+    
+    @Resource
+    private UserMapper userMapper;
     
     @Resource
     private CosManager cosManager;
@@ -46,5 +54,23 @@ public class SubmissionServiceImpl extends ServiceImpl<SubmissionMapper, Submiss
             submission.setContent(cosManager.getObjectPresignedUrl(submission.getContent(), FileType.ASSIGNMENT_FILE));
         }
         return submission;
+    }
+    
+    @Override
+    public List<ReviewListResponse> reviewListByAssignmentId(Long assignmentId, HttpServletRequest request) {
+        List<Submission> submissions = submissionMapper.selectList(new LambdaQueryWrapper<Submission>().eq(Submission::getAssignmentId, assignmentId));
+        List<ReviewListResponse> res = new ArrayList<>();
+        submissions.forEach(submission -> {
+            ReviewListResponse response = new ReviewListResponse();
+            response.setSubmissionId(submission.getId());
+            User submitter = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getId, submission.getSubmitterId()));
+            response.setSubmitterSid(submitter.getUserAccount());
+            response.setSubmitterName(submitter.getUsername());
+            response.setSubmitTime(submission.getSubmitTime());
+            response.setScore(submission.getScore());
+            response.setIsReviewed(submission.getScore() != null);
+            res.add(response);
+        });
+        return res;
     }
 }
