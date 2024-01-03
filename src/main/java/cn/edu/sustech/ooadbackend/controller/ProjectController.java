@@ -63,16 +63,13 @@ public class ProjectController {
             QueryWrapper<Group> groupQueryWrapper = new QueryWrapper<>();
             groupQueryWrapper.eq("project_id", projectId);
             List<Group> groupsList = groupService.list(groupQueryWrapper);
-            List<GroupsDetailResponse> list = groupsList.stream().map(new Function<Group, GroupsDetailResponse>() {
-                @Override
-                public GroupsDetailResponse apply(Group group) {
-                    GroupsDetailResponse groupDetail = new GroupsDetailResponse();
-                    groupDetail.setGroupCurrentNumber(groupService.getGroupCurrentNumber(group.getId()));
-                    groupDetail.setGroupMaxNumber(target.getMaxNumber());
-                    groupDetail.setName(group.getGroupName());
-                    groupDetail.setPublicInfo(group.getPublicInfo());
-                    return groupDetail;
-                }
+            List<GroupsDetailResponse> list = groupsList.stream().map(group -> {
+                GroupsDetailResponse groupDetail = new GroupsDetailResponse();
+                groupDetail.setGroupCurrentNumber(groupService.getGroupCurrentNumber(group.getId()));
+                groupDetail.setGroupMaxNumber(target.getMaxNumber());
+                groupDetail.setName(group.getGroupName());
+                groupDetail.setPublicInfo(group.getPublicInfo());
+                return groupDetail;
             }).toList();
             return ResponseUtils.success(list);
         } else throw new BusinessException(StatusCode.NO_AUTH, "当前用户无权限查看分组信息");
