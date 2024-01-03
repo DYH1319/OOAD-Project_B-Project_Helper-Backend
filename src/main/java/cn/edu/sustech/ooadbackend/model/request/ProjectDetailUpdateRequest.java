@@ -6,7 +6,7 @@ import java.util.Date;
 
 @Data
 public class ProjectDetailUpdateRequest {
-    private Long id;
+    private Long groupId;
     private String projectName;
     private String description;
     private Date groupDeadline;

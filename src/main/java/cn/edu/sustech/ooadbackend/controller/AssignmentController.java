@@ -75,9 +75,9 @@ public class AssignmentController {
         
         Long insertassignment = assignmentService.insertAssignment(assignmentInsertRequest);
         return ResponseUtils.success(insertassignment, "成功发布作业");
-        
+
     }
-    
+
     /**
      * 根据id更新作业信息
      *
