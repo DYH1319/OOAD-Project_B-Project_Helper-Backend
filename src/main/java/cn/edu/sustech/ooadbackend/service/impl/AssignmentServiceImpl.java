@@ -12,8 +12,10 @@ import cn.edu.sustech.ooadbackend.model.domain.User;
 import cn.edu.sustech.ooadbackend.model.request.AssignmentInsertRequest;
 import cn.edu.sustech.ooadbackend.model.request.AssignmentUpdateRequest;
 import cn.edu.sustech.ooadbackend.service.AssignmentService;
+import cn.edu.sustech.ooadbackend.service.SubmissionService;
 import cn.edu.sustech.ooadbackend.utils.CosManager;
 import cn.edu.sustech.ooadbackend.utils.DateTimeFormatTransferUtils;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
@@ -112,7 +114,7 @@ public class AssignmentServiceImpl extends ServiceImpl<AssignmentMapper, Assignm
     }
     
     @Override
-    public String assignmentFileUpload(MultipartFile file, HttpServletRequest request) {
+    public Long assignmentUpload(MultipartFile file, Long assignmentId, HttpServletRequest request) {
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
         if (currentUser == null) {
             throw new BusinessException(StatusCode.NOT_LOGIN, "未登录，请先登录");
@@ -147,13 +149,11 @@ public class AssignmentServiceImpl extends ServiceImpl<AssignmentMapper, Assignm
             throw new BusinessException(StatusCode.SYSTEM_ERROR, "上传失败");
         }
         
-        // TODO 数据库新建提交
         Submission submission = new Submission();
-        submission.setSubmitterId(9L);
-        submission.setAssignmentId(1L);
+        submission.setSubmitterId(currentUser.getId());
+        submission.setAssignmentId(assignmentId);
         submission.setContent(key);
         submission.setSubmitTime(new Date());
-        
         submission.setContentType(fileType);
         int count = submissionMapper.insert(submission);
         
@@ -161,6 +161,7 @@ public class AssignmentServiceImpl extends ServiceImpl<AssignmentMapper, Assignm
             throw new BusinessException(StatusCode.SYSTEM_ERROR, "数据库异常，请联系管理员");
         }
         
-        return cosManager.getObjectPresignedUrl(key, FileType.ASSIGNMENT_FILE);
+        Long submissionId = submissionMapper.selectOne(new LambdaQueryWrapper<Submission>().eq(Submission::getContent, key)).getId();
+        return submissionId;
     }
 }

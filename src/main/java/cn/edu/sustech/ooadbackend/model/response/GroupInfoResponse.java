@@ -11,8 +11,8 @@ import java.util.Date;
 @NoArgsConstructor
 public class GroupInfoResponse {
     private String groupName;
-    private Long groupLeader;
-    private Long defenceTeacher;
+    private String groupLeader;
+    private String defenceTeacher;
     private Date presentationTime;
     private String publicInfo;
 }

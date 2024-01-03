@@ -26,7 +26,7 @@ public interface AssignmentService extends IService<Assignment> {
      * 用户上传作业文件
      * @param file 作业文件
      * @param request HttpServletRequest
-     * @return 带有过期时间的预签名访问链接
+     * @return submissionId
      */
-    String assignmentFileUpload(MultipartFile file, HttpServletRequest request);
+    Long assignmentUpload(MultipartFile file, Long assignmentId, HttpServletRequest request);
 }
