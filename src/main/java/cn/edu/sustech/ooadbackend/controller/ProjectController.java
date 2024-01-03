@@ -81,6 +81,16 @@ public class ProjectController {
 
         Project target = projectService.getById(updateRequest.getProjectId());
 
+        int newCreatedGroup = updateRequest.getMaxNumber() - target.getMaxNumber();
+
+        if (newCreatedGroup > 0) {
+            for (int i = 0; i < newCreatedGroup; i++) {
+                Group group = new Group();
+                group.setGroupName("Group-" + (target.getMaxNumber() + i));
+                groupService.save(group);
+            }
+        }
+
         if ((currentUser.getUserRole() == UserConstant.ADMIN_ROLE || currentUser.getUserRole() == UserConstant.TEACHER_ASSISTANT_ROLE || currentUser.getUserRole() == UserConstant.TEACHER_ROLE) && courseService.checkCourseEnroll(currentUser.getId(), target.getCourseId())) {
             target.setDescription(updateRequest.getDescription());
             target.setProjectName(updateRequest.getProjectName());
