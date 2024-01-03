@@ -39,6 +39,9 @@ public class GroupController {
     private CourseService courseService;
     @Resource
     private GroupService groupService;
+
+    @Resource
+    private UserService userService;
     
     @PostMapping("/leave")
     public BaseResponse<Boolean> leaveProjectGroup(HttpServletRequest request, @RequestBody GroupUserRequest groupRequest) {
@@ -114,9 +117,13 @@ public class GroupController {
         
         //查询用户是否有权限
         if (courseService.checkCourseEnroll(currentUser.getId(), courseId)) {
+
+            User leader = userService.getById(target.getGroupLeader());
+            User defenceTeacher = userService.getById(target.getDefenceTeacher());
+
             response.setGroupName(target.getGroupName());
-            response.setGroupLeader(target.getGroupLeader());
-            response.setDefenceTeacher(target.getDefenceTeacher());
+            response.setGroupLeader(leader.getUsername());
+            response.setDefenceTeacher(defenceTeacher.getUsername());
             response.setPresentationTime(target.getPresentationTime());
             response.setPublicInfo(target.getPublicInfo());
             
