@@ -4,6 +4,7 @@ import cn.edu.sustech.ooadbackend.common.FileType;
 import cn.edu.sustech.ooadbackend.common.StatusCode;
 import cn.edu.sustech.ooadbackend.constant.UserConstant;
 import cn.edu.sustech.ooadbackend.exception.BusinessException;
+import cn.edu.sustech.ooadbackend.mapper.GradeBookMapper;
 import cn.edu.sustech.ooadbackend.mapper.SubmissionMapper;
 import cn.edu.sustech.ooadbackend.mapper.UserMapper;
 import cn.edu.sustech.ooadbackend.model.domain.Submission;
