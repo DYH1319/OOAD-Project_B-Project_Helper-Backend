@@ -179,12 +179,12 @@ public class AssignmentController {
         
     }
     
-    @PostMapping("/assignmentFile/upload")
-    public BaseResponse<String> assignmentFileUpload(@RequestParam MultipartFile file, HttpServletRequest request) {
+    @PostMapping("/upload")
+    public BaseResponse<Long> assignmentUpload(@RequestParam MultipartFile file, @RequestParam Long assignmentId, HttpServletRequest request) {
         if (request == null) {
             throw new BusinessException(StatusCode.PARAMS_ERROR);
         }
-        String presignedUrl = assignmentService.assignmentFileUpload(file, request);
-        return ResponseUtils.success(presignedUrl, "成功上传作业文件");
+        Long submissionId = assignmentService.assignmentUpload(file, assignmentId, request);
+        return ResponseUtils.success(submissionId, "成功提交作业");
     }
 }
