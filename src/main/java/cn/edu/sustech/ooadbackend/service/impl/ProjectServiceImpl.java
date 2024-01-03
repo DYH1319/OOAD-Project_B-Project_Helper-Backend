@@ -218,7 +218,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         boolean saved = notificationService.save(newNotification);
         
         if (!saved) throw new BusinessException(StatusCode.SYSTEM_ERROR, "新建通知时发生错误");
-        if (notificationRequest.getReceivers().length != 0) {
+        if (notificationRequest.getReceivers() != null && notificationRequest.getReceivers().length != 0) {
             
             List<UserNotification> userNotifications = Arrays.stream(notificationRequest.getReceivers()).map(receiverId -> {
                 UserNotification userNotification = new UserNotification();

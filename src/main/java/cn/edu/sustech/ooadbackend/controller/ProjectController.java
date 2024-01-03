@@ -79,7 +79,7 @@ public class ProjectController {
     public BaseResponse<Boolean> updateProjectInfo(HttpServletRequest request, @RequestBody ProjectDetailUpdateRequest updateRequest) {
         User currentUser = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
 
-        Project target = projectService.getById(updateRequest.getId());
+        Project target = projectService.getById(updateRequest.getProjectId());
 
         if ((currentUser.getUserRole() == UserConstant.ADMIN_ROLE || currentUser.getUserRole() == UserConstant.TEACHER_ASSISTANT_ROLE || currentUser.getUserRole() == UserConstant.TEACHER_ROLE) && courseService.checkCourseEnroll(currentUser.getId(), target.getCourseId())) {
             target.setDescription(updateRequest.getDescription());
