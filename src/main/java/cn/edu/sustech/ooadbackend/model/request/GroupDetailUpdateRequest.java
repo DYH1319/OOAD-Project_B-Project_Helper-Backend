@@ -7,10 +7,10 @@ import java.util.Date;
 @Data
 public class GroupDetailUpdateRequest {
     //groupId, groupName, groupLeader, defenceTeacher, presentationTime, publicInfo
-    private Long id;
+    private Long groupId;
     private String groupName;
-    private Long groupLeader;
-    private Long defenceTeacher;
+    private String groupLeader;
+    private String defenceTeacher;
     private Date presentationTime;
     private String publicInfo;
 

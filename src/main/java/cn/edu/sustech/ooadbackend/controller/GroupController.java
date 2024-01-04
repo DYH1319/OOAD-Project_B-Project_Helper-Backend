@@ -13,6 +13,7 @@ import cn.edu.sustech.ooadbackend.model.request.GroupUserRequest;
 import cn.edu.sustech.ooadbackend.model.response.GroupInfoResponse;
 import cn.edu.sustech.ooadbackend.service.*;
 import cn.edu.sustech.ooadbackend.utils.ResponseUtils;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
@@ -139,17 +140,19 @@ public class GroupController {
         
         if (currentUser == null) throw new BusinessException(StatusCode.NOT_LOGIN);
         
-        Group target = groupService.getById(updateRequest.getId());
+        Group target = groupService.getById(updateRequest.getGroupId());
         Long projectId = target.getProjectId();
         QueryWrapper<Project> projectQueryWrapper = new QueryWrapper<>();
         projectQueryWrapper.eq("id",projectId);
         Long courseId = projectService.getOne(projectQueryWrapper).getCourseId();
         
         if ((currentUser.getUserRole() == UserConstant.ADMIN_ROLE || currentUser.getUserRole() == UserConstant.TEACHER_ASSISTANT_ROLE || currentUser.getUserRole() == UserConstant.TEACHER_ROLE) && courseService.checkCourseEnroll(currentUser.getId(), courseId)) {
-            target.setId(updateRequest.getId());
+            target.setId(updateRequest.getGroupId());
             target.setGroupName(updateRequest.getGroupName());
-            target.setGroupLeader(updateRequest.getGroupLeader());
-            target.setDefenceTeacher(updateRequest.getDefenceTeacher());
+            User user2 = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getUsername, updateRequest.getGroupLeader()));
+            target.setGroupLeader(user2.getId());
+            User user = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getUsername, updateRequest.getDefenceTeacher()));
+            target.setDefenceTeacher(user.getId());
             target.setPresentationTime(updateRequest.getPresentationTime());
             target.setPublicInfo(updateRequest.getPublicInfo());
             boolean b = groupService.updateById(target);
